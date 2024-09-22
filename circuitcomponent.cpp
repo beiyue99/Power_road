@@ -2,37 +2,27 @@
 
 
 
-// 自定义灯泡图形，添加编号
-QGraphicsItem* createLamp(char label) {
-    CircuitComponent* lamp = new CircuitComponent;
 
-    // 创建外部空心圆圈
-    QGraphicsEllipseItem* bulbOuterCircle = new QGraphicsEllipseItem(0, 0, 40, 40);
-    bulbOuterCircle->setPen(QPen(Qt::black, 2));    // 设置边框
-    bulbOuterCircle->setBrush(Qt::NoBrush);         // 确保没有填充
-    lamp->addToGroup(bulbOuterCircle);
 
-    // 添加六条实线，从圆周向外延伸
-    for (int i = 0; i < 6; ++i) {
-        // 计算每条线的起点（在圆周上）和终点（在圆圈外）
-        qreal angle = i * M_PI / 3;  // 每隔60度一条线
-        qreal startX = 20 + 20 * qCos(angle);
-        qreal startY = 20 + 20 * qSin(angle);
-        qreal endX = 20 + 30 * qCos(angle);
-        qreal endY = 20 + 30 * qSin(angle);
-
-        QGraphicsLineItem* line = new QGraphicsLineItem(QLineF(startX, startY, endX, endY));
-        line->setPen(QPen(Qt::black, 2));
-        lamp->addToGroup(line);
+void CircuitComponent::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    if (QGraphicsScene* currentScene = scene()) {
+        // 清除其他元件的选中状态
+        QList<QGraphicsItem*> items = currentScene->items();
+        for (QGraphicsItem* item : items) {
+            if (item != this && dynamic_cast<CircuitComponent*>(item)) {
+                item->setSelected(false);
+            }
+        }
     }
 
-    // 在灯泡下方添加字母编号
-    QGraphicsTextItem* labelItem = new QGraphicsTextItem(QString(label));
-    labelItem->setPos(15, 45);  // 设置字母的位置
-    lamp->addToGroup(labelItem);
+    // 设置当前元件为选中状态
+    setSelected(true);
 
-    lamp->setFlag(QGraphicsItem::ItemIsSelectable, false);
-    return lamp;
+    // 更新视图
+    update();
+
+    // 调用基类的处理
+    QGraphicsItemGroup::mousePressEvent(event);
 }
 
 
@@ -40,9 +30,64 @@ QGraphicsItem* createLamp(char label) {
 
 
 
-QGraphicsItem* createSwitch(int number, bool isVertical) {
-    CircuitComponent* group = new CircuitComponent;
 
+
+
+
+
+
+
+CircuitComponent* createLamp(char label) {
+    // 创建一个 CircuitComponent，表示灯泡
+    CircuitComponent* lampComponent = new CircuitComponent(QString("灯泡%1").arg(label), "Lamp");
+
+    // 创建灯泡的空心部分
+    QGraphicsEllipseItem* lampBody = new QGraphicsEllipseItem(0, 0, 50, 50);
+    lampBody->setPen(QPen(Qt::black, 2)); // 设置边框颜色和厚度
+    lampBody->setBrush(Qt::NoBrush); // 空心灯泡
+
+    // 定义灯泡中心和外圆半径
+    const qreal centerX = 25;
+    const qreal centerY = 25;
+    const qreal radius = 25;
+    const qreal lineLength = 20; // 每根线的长度
+
+    // 创建六根线，分别按60度间隔排列
+    for (int i = 0; i < 6; ++i) {
+        // 计算每根线的角度 (60度间隔)
+        qreal angle = qDegreesToRadians(60.0 * i);
+
+        // 计算每根线的起点（灯泡外圆上的点）
+        qreal startX = centerX + radius * qCos(angle);
+        qreal startY = centerY + radius * qSin(angle);
+
+        // 计算每根线的终点（起点再延伸lineLength）
+        qreal endX = startX + lineLength * qCos(angle);
+        qreal endY = startY + lineLength * qSin(angle);
+
+        // 创建线条并添加到组件中
+        QGraphicsLineItem* line = new QGraphicsLineItem(startX, startY, endX, endY);
+        lampComponent->addToGroup(line);
+    }
+
+    // 创建文本标签
+    QGraphicsTextItem* lampLabel = new QGraphicsTextItem(QString(label));
+    lampLabel->setPos(20, 20); // 设置标签位置
+
+    // 将灯泡主体和标签添加到组件中
+    lampComponent->addToGroup(lampBody);
+    lampComponent->addToGroup(lampLabel);
+//    lampComponent->setFlag(QGraphicsItem::ItemIsSelectable, false);
+    return lampComponent;
+}
+
+
+
+
+
+CircuitComponent* createSwitch(int number, bool isVertical) {
+//    CircuitComponent* group = new CircuitComponent;
+    CircuitComponent* group = new CircuitComponent(QString::number(number), "开关");
     // 两个小圆圈
     QGraphicsEllipseItem* circle1 = new QGraphicsEllipseItem(0, 0, 10, 10);
     circle1->setPen(QPen(Qt::black, 2));
@@ -75,16 +120,16 @@ QGraphicsItem* createSwitch(int number, bool isVertical) {
     }
     group->addToGroup(numberItem);
 
-    group->setFlag(QGraphicsItem::ItemIsSelectable, false);
+//    group->setFlag(QGraphicsItem::ItemIsSelectable, false);
     return group;
 }
 
 
 
 // 自定义电源图形，添加编号
-QGraphicsItem* createPower(int number) {
-    CircuitComponent* group = new CircuitComponent;
-
+CircuitComponent* createPower(int number) {
+//    CircuitComponent* group = new CircuitComponent;
+    CircuitComponent* group = new CircuitComponent(QString("电源") + QString::number(number), "电源");
     // 外部圆圈
     QGraphicsEllipseItem* powerCircle = new QGraphicsEllipseItem(0, 0, 40, 40);
     powerCircle->setPen(QPen(Qt::black, 2));
@@ -107,19 +152,22 @@ QGraphicsItem* createPower(int number) {
     numberItem->setPos(-45, 10);  // 调整编号的位置到左侧
     group->addToGroup(numberItem);
 
-    group->setFlag(QGraphicsItem::ItemIsSelectable, false);
+//    group->setFlag(QGraphicsItem::ItemIsSelectable, false);
     return group;
 }
 
-
-// 创建不带编号的灯泡图案
-QGraphicsItem* createLampWithoutLabel() {
-    CircuitComponent* lamp = new CircuitComponent;
+CircuitComponent* createLampWithoutLabel() {
+    CircuitComponent* lamp = new CircuitComponent("无标识灯泡", "灯泡");
 
     // 外部空心圆圈
     QGraphicsEllipseItem* bulbOuterCircle = new QGraphicsEllipseItem(0, 0, 40, 40);
-    bulbOuterCircle->setPen(QPen(Qt::black, 2));    // 设置边框
-    bulbOuterCircle->setBrush(Qt::NoBrush);         // 确保没有填充
+    bulbOuterCircle->setPen(QPen(Qt::black, 2));
+    bulbOuterCircle->setBrush(Qt::NoBrush);
+
+    // 允许灯泡被点击和选中
+    bulbOuterCircle->setFlag(QGraphicsItem::ItemIsSelectable, true);
+    bulbOuterCircle->setFlag(QGraphicsItem::ItemIsMovable, false);
+
     lamp->addToGroup(bulbOuterCircle);
 
     // 绘制从圆周向外延伸的六条实线
@@ -131,13 +179,15 @@ QGraphicsItem* createLampWithoutLabel() {
         qreal y2 = 20 + 30 * qSin(qDegreesToRadians(angle));
         lamp->addToGroup(new QGraphicsLineItem(x1, y1, x2, y2, bulbOuterCircle));
     }
-    lamp->setFlag(QGraphicsItem::ItemIsSelectable, false); // 禁止选中
+
+    lamp->setFlag(QGraphicsItem::ItemIsSelectable, true); // 确保整个组件可被选中
     return lamp;
 }
 
 
-QGraphicsItem* createSwitchWithoutLabel() {
-    CircuitComponent* group = new CircuitComponent;
+
+CircuitComponent* createSwitchWithoutLabel() {
+    CircuitComponent* group = new CircuitComponent("无标识开关", "开关");
 
     // 两个小圆圈
     QGraphicsEllipseItem* circle1 = new QGraphicsEllipseItem(0, 0, 10, 10);
@@ -166,9 +216,10 @@ QGraphicsItem* createSwitchWithoutLabel() {
     return group;
 }
 
-// 不带标识的电源图形
-QGraphicsItem* createPowerWithoutLabel() {
-    CircuitComponent* group = new CircuitComponent;
+
+
+CircuitComponent* createPowerWithoutLabel() {
+    CircuitComponent* group = new CircuitComponent("无标识电源", "电源");
 
     // 外部圆圈
     QGraphicsEllipseItem* powerCircle = new QGraphicsEllipseItem(0, 0, 40, 40);
@@ -186,6 +237,5 @@ QGraphicsItem* createPowerWithoutLabel() {
     group->addToGroup(sItem);
 
     group->setFlag(QGraphicsItem::ItemIsSelectable, false); // 禁止选中
-    // 返回没有标识符的电源图形
     return group;
 }

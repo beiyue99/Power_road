@@ -1,10 +1,7 @@
 #ifndef CLICKABLEGRAPHICSVIEW_H
 #define CLICKABLEGRAPHICSVIEW_H
-
 #include <QGraphicsView>
 #include <QMouseEvent>
-
-
 
 
 //视图类，左侧三个元件所在窗口即是一个视图
