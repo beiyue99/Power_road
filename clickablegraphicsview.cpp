@@ -1,0 +1,1 @@
+#include "clickablegraphicsview.h"
