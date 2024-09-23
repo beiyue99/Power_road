@@ -188,6 +188,23 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     // 在构造函数中连接旋转角度的信号
     connect(rotationEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onRotationChanged);
 
+
+
+
+
+    connect(disconnectButton, &QPushButton::clicked, this, [this]() {
+        CircuitComponent* selectedComponent = scene->getSelectedComponent();
+        if (selectedComponent && selectedComponent->getType() == "开关") {
+            selectedComponent->setClosed(false);  // 设置为断开状态
+        }
+    });
+
+    connect(connectButton, &QPushButton::clicked, this, [this]() {
+        CircuitComponent* selectedComponent = scene->getSelectedComponent();
+        if (selectedComponent && selectedComponent->getType() == "开关") {
+            selectedComponent->setClosed(true);  // 设置为闭合状态
+        }
+    });
 }
 
 

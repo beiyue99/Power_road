@@ -2,6 +2,83 @@
 
 
 
+void CircuitComponent::updateSwitchAppearance() {
+    QGraphicsLineItem* middleLine = nullptr;
+
+    // 查找中间的翘起线
+    for (QGraphicsItem* item : childItems()) {
+        if (QGraphicsLineItem* line = dynamic_cast<QGraphicsLineItem*>(item)) {
+            QLineF lineData = line->line();
+            // 判断是否是中间的翘起线条
+            if (lineData.p1() == QPointF(5, 5) && (lineData.p2() == QPointF(55, -10) || lineData.p2() == QPointF(55, 5))) {
+                middleLine = line;
+                break;
+            }
+        }
+    }
+
+    if (middleLine) {
+        // 根据旋转角度来决定闭合或断开的线条方向
+        if (isVertical()) {
+            if (m_isClosed) {
+                // 竖直状态下的闭合
+                middleLine->setLine(QLineF(5, 5, 5, -45));  // 竖直方向闭合
+            } else {
+                // 竖直状态下的断开，翘起30度
+                middleLine->setLine(QLineF(5, 5, 5, 45));  // 向上翘起30度
+            }
+        } else {
+            if (m_isClosed) {
+                // 水平状态下的闭合
+                middleLine->setLine(QLineF(5, 5, 55, 5));  // 水平方向闭合
+            } else {
+                // 水平状态下的断开，翘起30度
+                middleLine->setLine(QLineF(5, 5, 55, -10));  // 向上翘起30度
+            }
+        }
+    }
+
+    update();  // 更新显示
+}
+
+
+
+
+
+CircuitComponent* createSwitch(int number) {
+    CircuitComponent* group = new CircuitComponent(QString("开关%1").arg(number), "开关");
+
+    // 两个小圆圈
+    QGraphicsEllipseItem* circle1 = new QGraphicsEllipseItem(0, 0, 10, 10);
+    QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem(50, 0, 10, 10);
+    group->addToGroup(circle1);
+    group->addToGroup(circle2);
+
+    // 圆圈外两端的实线
+    QGraphicsLineItem* line1 = new QGraphicsLineItem(QLineF(-10, 5, 0, 5));  // 左端实线
+    group->addToGroup(line1);
+    QGraphicsLineItem* line2 = new QGraphicsLineItem(QLineF(60, 5, 70, 5));  // 右端实线
+    group->addToGroup(line2);
+
+    // 中间的翘起实线，表示未闭合，翘起角度为30度
+    QGraphicsLineItem* middleLine = new QGraphicsLineItem(QLineF(5, 5, 55, -10));
+    group->addToGroup(middleLine);
+
+    // 添加数字编号
+    QGraphicsTextItem* numberItem = new QGraphicsTextItem(QString::number(number));
+    numberItem->setPos(20, 15);  // 数字在下方
+    group->addToGroup(numberItem);
+
+    // 初始化为断开状态
+    group->setClosed(false);
+
+    return group;
+}
+
+
+
+
+
 
 void CircuitComponent::setRotation(double angle) {
 
@@ -95,32 +172,6 @@ CircuitComponent* createLamp(char label) {
 
 
 
-CircuitComponent* createSwitch(int number) {
-
-    CircuitComponent* group = new CircuitComponent(QString("开关%1").arg(number), "开关");
-
-    // 两个小圆圈
-    QGraphicsEllipseItem* circle1 = new QGraphicsEllipseItem(0, 0, 10, 10);
-
-    QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem(50, 0, 10, 10);
-
-    group->addToGroup(circle1);
-    group->addToGroup(circle2);
-
-    // 圆圈外两端的实线
-    QGraphicsLineItem* line1 = new QGraphicsLineItem(QLineF(-10, 5, 0, 5));  // 左端实线
-    group->addToGroup(line1);
-    QGraphicsLineItem* line2 = new QGraphicsLineItem(QLineF(60, 5, 70, 5));  // 右端实线
-    group->addToGroup(line2);
-    // 中间的翘起实线，表示未闭合，翘起角度为30度
-    QGraphicsLineItem* line = new QGraphicsLineItem(QLineF(5, 5, 45, -10));
-    group->addToGroup(line);
-    // 添加数字编号
-    QGraphicsTextItem* numberItem = new QGraphicsTextItem(QString::number(number));
-    numberItem->setPos(20, 15);  // 数字在下方
-    group->addToGroup(numberItem);
-    return group;
-}
 
 
 
