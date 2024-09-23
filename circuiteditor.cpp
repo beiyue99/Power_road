@@ -11,6 +11,7 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     // 灯泡部分
     QVBoxLayout* lampLayout = new QVBoxLayout();
     QLabel* lampLabel = new QLabel("灯泡");
+    lampLabel->setAlignment(Qt::AlignCenter);
     lampView = new ClickableGraphicsView();
     QGraphicsScene* lampScene = new QGraphicsScene();
     lampScene->addItem(createLampWithoutLabel());
@@ -22,6 +23,7 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     // 开关部分
     QVBoxLayout* switchLayout = new QVBoxLayout();
     QLabel* switchLabel = new QLabel("开关");
+    switchLabel->setAlignment(Qt::AlignCenter);
     switchView = new ClickableGraphicsView();
     QGraphicsScene* switchScene = new QGraphicsScene();
     switchScene->addItem(createSwitchWithoutLabel());
@@ -33,6 +35,7 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     // 电源部分
     QVBoxLayout* powerLayout = new QVBoxLayout();
     QLabel* powerLabel = new QLabel("电源");
+    powerLabel->setAlignment(Qt::AlignCenter);
     powerView = new ClickableGraphicsView();
     QGraphicsScene* powerScene = new QGraphicsScene();
     powerScene->addItem(createPowerWithoutLabel());
@@ -109,18 +112,66 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     rightLayout->addWidget(separator);
 
 
-    // 连接元件信息
+
+
+    // 创建布局
+    QVBoxLayout* comboxLayout = new QVBoxLayout();
+
+    // 1端布局
+    QVBoxLayout* end1Layout = new QVBoxLayout();
+    label1 = new QLabel("1端:");
+    label1->setStyleSheet("font-weight: bold;"); // 加粗显示
     comboBox1 = new QComboBox();
-    comboBox1->addItems({"元件1", "元件2", "元件3"});
-    comboBox1->setVisible(false); // 初始隐藏
-
     comboBox2 = new QComboBox();
-    comboBox2->addItems({"元件1", "元件2", "元件3"});
-    comboBox2->setVisible(false); // 初始隐藏
+    comboBox3 = new QComboBox();
+
+    // 将1端的控件添加到布局
+    end1Layout->addWidget(label1);
+    end1Layout->addWidget(comboBox1);
+    end1Layout->addWidget(comboBox2);
+    end1Layout->addWidget(comboBox3);
+
+    // 2端布局
+    QVBoxLayout* end2Layout = new QVBoxLayout();
+    label2 = new QLabel("2端:");
+    label2->setStyleSheet("font-weight: bold;"); // 加粗显示
+    comboBox4 = new QComboBox();
+    comboBox5 = new QComboBox();
+    comboBox6 = new QComboBox();
+
+    // 将2端的控件添加到布局
+    end2Layout->addWidget(label2);
+    end2Layout->addWidget(comboBox4);
+    end2Layout->addWidget(comboBox5);
+    end2Layout->addWidget(comboBox6);
+
+    // 将1端和2端布局添加到主布局
+    comboxLayout->addLayout(end1Layout);
+    comboxLayout->addLayout(end2Layout);
+
+    // 添加主布局到右侧布局
+    rightLayout->addLayout(comboxLayout);
+
+    // 隐藏1端和2端的控件
+    label1->setVisible(false);
+    label2->setVisible(false);
+    comboBox1->setVisible(false);
+    comboBox2->setVisible(false);
+    comboBox3->setVisible(false);
+    comboBox4->setVisible(false);
+    comboBox5->setVisible(false);
+    comboBox6->setVisible(false);
 
 
-    rightLayout->addWidget(comboBox1);
-    rightLayout->addWidget(comboBox2);
+
+
+
+
+
+
+
+
+
 
 
     // 将布局加入主布局中
@@ -150,26 +201,30 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
 
 void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
     nameLabel->setText(component->getName());
+    nameLabel->setAlignment(Qt::AlignCenter);  // 确保居中对齐
     rotationEdit->setText(QString::number(component->rotation()));
     posXEdit->setText(QString::number(component->pos().x()));
     posYEdit->setText(QString::number(component->pos().y()));
-    typeLabel->setText(component->getType());
+    typeLabel->setText("类型：" + component->getType());
+    typeLabel->setAlignment(Qt::AlignCenter);  // 确保居中对齐
 
     // 根据类型显示或隐藏按钮和 comboBox
-    if (component->getType() == "开关") {
-        disconnectButton->setVisible(true);
-        connectButton->setVisible(true);
-        comboBox1->setVisible(true);
-        comboBox2->setVisible(true);
+    bool isSwitch = component->getType() == "开关";
 
-    } else {
-        // 如果不是开关，隐藏这些按钮和 comboBox
-        disconnectButton->setVisible(false);
-        connectButton->setVisible(false);
-        comboBox1->setVisible(false);
-        comboBox2->setVisible(false);
-    }
+    disconnectButton->setVisible(isSwitch);
+    connectButton->setVisible(isSwitch);
+    label1->setVisible(isSwitch);
+    label2->setVisible(isSwitch);
+    comboBox1->setVisible(isSwitch);
+    comboBox2->setVisible(isSwitch);
+    comboBox3->setVisible(isSwitch);
+    comboBox4->setVisible(isSwitch);
+    comboBox5->setVisible(isSwitch);
+    comboBox6->setVisible(isSwitch);
 }
+
+
+
 
 
 

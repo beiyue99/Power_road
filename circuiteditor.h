@@ -40,9 +40,16 @@ private:
     ClickableGraphicsView* switchView;
     ClickableGraphicsView* powerView;
 
-    QComboBox* comboBox1;  // ComboBox1 用于连接元件1
-    QComboBox* comboBox2;  // ComboBox2 用于连接元件2
+    QLabel* label1 = new QLabel;
+    QLabel* label2 = new QLabel;
 
+    QComboBox* comboBox1;  // 用于1端连接元件1
+    QComboBox* comboBox2;  // 用于1端连接元件2
+    QComboBox* comboBox3;  // 用于1端连接元件3
+
+    QComboBox* comboBox4;  // 用于2端连接元件1
+    QComboBox* comboBox5;  // 用于2端连接元件2
+    QComboBox* comboBox6;  // 用于2端连接元件3
 };
 
 #endif // CIRCUITEDITOR_H

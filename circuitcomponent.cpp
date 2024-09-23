@@ -10,7 +10,8 @@ CircuitComponent::CircuitComponent(const QString& name, const QString& type, QGr
 
 
 
-void CircuitComponent::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+void CircuitComponent::paint(QPainter* painter,
+                             const QStyleOptionGraphicsItem* option, QWidget* widget) {
     // 选中时将元件设置为红色
     QPen pen;
     if (isSelected()) {
@@ -133,6 +134,7 @@ CircuitComponent* createPower(int number) {
 
 CircuitComponent* createLampWithoutLabel() {
     CircuitComponent* lamp = new CircuitComponent("无标识灯泡", "灯泡");
+
     // 外部空心圆圈
     QGraphicsEllipseItem* bulbOuterCircle = new QGraphicsEllipseItem(0, 0, 40, 40);
     bulbOuterCircle->setPen(QPen(Qt::black, 2));
