@@ -28,11 +28,7 @@ void CircuitScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
         if (component) {
             QString itemName = component->getName();
             QString itemType = component->getType();
-            int rotation = component->rotation(); // 获取旋转角度
-            int posX = component->pos().x();
-            int posY = component->pos().y();
-
-            emit itemClicked(itemName, itemType, rotation, posX, posY);
+            emit itemClicked(component);
         }
     }
 

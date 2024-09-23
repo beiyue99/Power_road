@@ -16,7 +16,7 @@ public:
     void addComponent(QGraphicsItem* component); // 添加元件到场景
 
 signals:
-    void itemClicked(const QString& itemName, const QString& itemType, int rotation, int posX, int posY);
+    void itemClicked(CircuitComponent* component);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

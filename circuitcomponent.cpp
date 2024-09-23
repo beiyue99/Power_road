@@ -81,7 +81,8 @@ CircuitComponent* createLamp(char label) {
 
 CircuitComponent* createSwitch(int number) {
 
-    CircuitComponent* group = new CircuitComponent(QString::number(number), "开关");
+    CircuitComponent* group = new CircuitComponent(QString("开关%1").arg(number), "开关");
+
     // 两个小圆圈
     QGraphicsEllipseItem* circle1 = new QGraphicsEllipseItem(0, 0, 10, 10);
 

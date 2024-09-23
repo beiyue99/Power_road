@@ -96,6 +96,8 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     QHBoxLayout* switchControlLayout = new QHBoxLayout();
     disconnectButton = new QPushButton("断开");
     connectButton = new QPushButton("闭合");
+    disconnectButton->setVisible(false); // 初始隐藏
+    connectButton->setVisible(false); // 初始隐藏
     switchControlLayout->addWidget(disconnectButton);
     switchControlLayout->addWidget(connectButton);
     rightLayout->addLayout(switchControlLayout);
@@ -110,11 +112,16 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     // 连接元件信息
     comboBox1 = new QComboBox();
     comboBox1->addItems({"元件1", "元件2", "元件3"});
-    rightLayout->addWidget(comboBox1);
+    comboBox1->setVisible(false); // 初始隐藏
 
     comboBox2 = new QComboBox();
     comboBox2->addItems({"元件1", "元件2", "元件3"});
+    comboBox2->setVisible(false); // 初始隐藏
+
+
+    rightLayout->addWidget(comboBox1);
     rightLayout->addWidget(comboBox2);
+
 
     // 将布局加入主布局中
     mainLayout->addLayout(leftLayout, 1); // 左侧电路元件按钮布局
@@ -134,14 +141,8 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
         scene->addItem(createPower(powerCounter++));
     });
 
-    connect(scene, &CircuitScene::itemClicked, this, [this](const QString& itemName, const QString& itemType, int rotation, int posX, int posY) {
-        // 更新右侧显示区域
-        nameLabel->setText(itemName);
-        rotationEdit->setText(QString::number(rotation));
-        posXEdit->setText(QString::number(posX));
-        posYEdit->setText(QString::number(posY));
-        typeLabel->setText("类型：" + itemType);
-    });
+    connect(scene, &CircuitScene::itemClicked, this, &CircuitEditor::updateComponentDetails);
+
 
 
 }
@@ -154,12 +155,13 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
     posYEdit->setText(QString::number(component->pos().y()));
     typeLabel->setText(component->getType());
 
-    // 根据类型显示或隐藏按钮和 combobox
+    // 根据类型显示或隐藏按钮和 comboBox
     if (component->getType() == "开关") {
         disconnectButton->setVisible(true);
         connectButton->setVisible(true);
         comboBox1->setVisible(true);
         comboBox2->setVisible(true);
+
     } else {
         // 如果不是开关，隐藏这些按钮和 comboBox
         disconnectButton->setVisible(false);
@@ -168,6 +170,7 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
         comboBox2->setVisible(false);
     }
 }
+
 
 
 
