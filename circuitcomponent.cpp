@@ -8,12 +8,7 @@ void CircuitComponent::updateSwitchAppearance() {
     // 查找中间的翘起线
     for (QGraphicsItem* item : childItems()) {
         if (QGraphicsLineItem* line = dynamic_cast<QGraphicsLineItem*>(item)) {
-            QLineF lineData = line->line();
-            // 判断是否是中间的翘起线条
-            if (lineData.p1() == QPointF(5, 5) && (lineData.p2() == QPointF(55, -10) || lineData.p2() == QPointF(55, 5))) {
-                middleLine = line;
-                break;
-            }
+            middleLine = line;
         }
     }
 
@@ -22,10 +17,10 @@ void CircuitComponent::updateSwitchAppearance() {
         if (isVertical()) {
             if (m_isClosed) {
                 // 竖直状态下的闭合
-                middleLine->setLine(QLineF(5, 5, 5, -45));  // 竖直方向闭合
+                middleLine->setLine(QLineF(5, 5, 55, 5));  // 竖直方向闭合
             } else {
                 // 竖直状态下的断开，翘起30度
-                middleLine->setLine(QLineF(5, 5, 5, 45));  // 向上翘起30度
+                middleLine->setLine(QLineF(5, 5, 55, -10));  // 向上翘起30度
             }
         } else {
             if (m_isClosed) {
@@ -40,6 +35,7 @@ void CircuitComponent::updateSwitchAppearance() {
 
     update();  // 更新显示
 }
+
 
 
 
