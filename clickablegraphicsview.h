@@ -4,7 +4,7 @@
 #include <QMouseEvent>
 
 
-//视图类，左侧三个元件所在窗口即是一个视图
+//视图类，左侧三个元件所在窗口即是一个视图,重写点击事件，点击后绘制元件到电路图
 
 
 class ClickableGraphicsView : public QGraphicsView {
@@ -18,11 +18,7 @@ signals:
 
 protected:
     // 重写鼠标点击事件
-    void mousePressEvent(QMouseEvent* event) override {
-        if (event->button() == Qt::LeftButton) {
-            emit clicked();  // 发出点击信号
-        }
-    }
+    void mousePressEvent(QMouseEvent* event) ;
 };
 
 #endif // CLICKABLEGRAPHICSVIEW_H

@@ -7,6 +7,7 @@
 #include <QList>
 #include "circuitcomponent.h"
 #include "circuiteditor.h"
+#include <QtDebug>
 class CircuitScene : public QGraphicsScene {
     Q_OBJECT
 
@@ -16,7 +17,7 @@ public:
 
 signals:
     void itemClicked(const QString& itemName, const QString& itemType, int rotation, int posX, int posY);
-    void componentSelected(CircuitComponent* component);
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 };

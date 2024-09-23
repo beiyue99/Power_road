@@ -1,16 +1,13 @@
 #include "circuiteditor.h"
 #include "circuitcomponent.h"
-
 #include "circuitscene.h"  // 添加这一行
 #include <QFrame>
 
 CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1), switchCounter(1), lampCounter('A') {
     // 创建主布局：水平布局
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
-
     // 左侧布局：电路元件按钮，图形在上，名字在下
     QVBoxLayout* leftLayout = new QVBoxLayout();
-
     // 灯泡部分
     QVBoxLayout* lampLayout = new QVBoxLayout();
     QLabel* lampLabel = new QLabel("灯泡");
@@ -109,18 +106,7 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     separator->setFrameShadow(QFrame::Sunken); // 可选的，设置阴影效果
     rightLayout->addWidget(separator);
 
-//    // 连接元件信息
-//    QComboBox* connector1Combo = new QComboBox();
-//    connector1Combo->addItems({"元件1", "元件2", "元件3"});
-//    rightLayout->addWidget(connector1Combo);
 
-//    QComboBox* connector2Combo = new QComboBox();
-//    connector2Combo->addItems({"元件1", "元件2", "元件3"});
-//    rightLayout->addWidget(connector2Combo);
-
-//    QComboBox* connector3Combo = new QComboBox();
-//    connector3Combo->addItems({"元件1", "元件2", "元件3"});
-//    rightLayout->addWidget(connector3Combo);
     // 连接元件信息
     comboBox1 = new QComboBox();
     comboBox1->addItems({"元件1", "元件2", "元件3"});
@@ -141,7 +127,7 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     });
 
     connect(switchView, &ClickableGraphicsView::clicked, [this, scene]() {
-        scene->addItem(createSwitch(switchCounter++, false));
+        scene->addItem(createSwitch(switchCounter++));
     });
 
     connect(powerView, &ClickableGraphicsView::clicked, [this, scene]() {
@@ -157,7 +143,6 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
         typeLabel->setText("类型：" + itemType);
     });
 
-      connect(scene, &CircuitScene::componentSelected, this, &CircuitEditor::updateComponentDetails);
 
 }
 

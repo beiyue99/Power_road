@@ -1,6 +1,5 @@
 #include "circuitscene.h"
 #include "circuitcomponent.h"
-
 #include <QGraphicsSceneMouseEvent>
 
 CircuitScene::CircuitScene(QObject* parent)
@@ -19,13 +18,9 @@ void CircuitScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (item) {
         // 尝试将 item 转换为 CircuitComponent
         CircuitComponent* component = nullptr;
-
         // 首先检查 item 是否已经是 CircuitComponent
         if ((component = dynamic_cast<CircuitComponent*>(item))) {
-
-            // 点击的是 CircuitComponent
         } else if (item->parentItem()) {
-            // 检查 parentItem 是否是 CircuitComponent
             component = dynamic_cast<CircuitComponent*>(item->parentItem());
         }
 
@@ -37,8 +32,6 @@ void CircuitScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
             int posX = component->pos().x();
             int posY = component->pos().y();
 
-            // 触发信号，更新右侧信息面板
-            emit componentSelected(component);
             emit itemClicked(itemName, itemType, rotation, posX, posY);
         }
     }
@@ -46,5 +39,3 @@ void CircuitScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     // 保留默认的事件处理
     QGraphicsScene::mousePressEvent(event);
 }
-
-

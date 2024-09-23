@@ -35,7 +35,7 @@ private:
     QLineEdit* posYEdit;
     QLabel* typeLabel;
     QPushButton* disconnectButton;
-    QPushButton* connectButton; // 连接按钮
+    QPushButton* connectButton;
     ClickableGraphicsView* lampView;
     ClickableGraphicsView* switchView;
     ClickableGraphicsView* powerView;
