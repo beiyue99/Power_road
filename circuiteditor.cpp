@@ -52,7 +52,7 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
 
     // 中间布局：电路编辑区域
     QGraphicsView* view = new QGraphicsView(this);
-    CircuitScene* scene = new CircuitScene(this);
+    scene = new CircuitScene(this);
     view->setScene(scene);
 
     // 右侧布局：元件详细信息
@@ -165,38 +165,52 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
 
 
 
-
-
-
-
-
-
-
-
-
     // 将布局加入主布局中
     mainLayout->addLayout(leftLayout, 1); // 左侧电路元件按钮布局
     mainLayout->addWidget(view, 4);       // 中间电路编辑区
     mainLayout->addLayout(rightLayout, 1); // 右侧元件详细信息布局
 
     // 点击事件：添加带编号的元件到中间电路区域
-    connect(lampView, &ClickableGraphicsView::clicked, [this, scene]() {
+    connect(lampView, &ClickableGraphicsView::clicked, [this]() {
         scene->addItem(createLamp(lampCounter++));
     });
 
-    connect(switchView, &ClickableGraphicsView::clicked, [this, scene]() {
+    connect(switchView, &ClickableGraphicsView::clicked, [this]() {
         scene->addItem(createSwitch(switchCounter++));
     });
 
-    connect(powerView, &ClickableGraphicsView::clicked, [this, scene]() {
+    connect(powerView, &ClickableGraphicsView::clicked, [this]() {
         scene->addItem(createPower(powerCounter++));
     });
 
     connect(scene, &CircuitScene::itemClicked, this, &CircuitEditor::updateComponentDetails);
 
-
+    // 在构造函数中连接旋转角度的信号
+    connect(rotationEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onRotationChanged);
 
 }
+
+
+
+
+
+
+
+void CircuitEditor::onRotationChanged() {
+    bool ok;
+    double angle = rotationEdit->text().toDouble(&ok);
+    if (ok) {
+        // 获取当前选中的元件
+        CircuitComponent* selectedComponent = scene->getSelectedComponent();
+        if (selectedComponent) {
+            selectedComponent->setRotation(angle); // 旋转指定角度
+            selectedComponent->update(); // 更新显示
+        }
+    }
+}
+
+
+
 
 
 void CircuitEditor::updateComponentDetails(CircuitComponent* component) {

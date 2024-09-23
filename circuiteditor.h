@@ -1,5 +1,6 @@
 #ifndef CIRCUITEDITOR_H
 #define CIRCUITEDITOR_H
+#include "circuitscene.h"  // 确保这个路径是正确的
 
 #include <QWidget>
 #include <QGraphicsView>
@@ -17,6 +18,8 @@
 #include "componentfactory.h"
 #include "circuitcomponent.h"
 
+class CircuitScene;
+
 class CircuitEditor : public QWidget {
     Q_OBJECT
 
@@ -25,7 +28,10 @@ public:
 
 public slots:
     void updateComponentDetails(CircuitComponent* component);
+    void onRotationChanged();
 private:
+    CircuitScene* scene; // 声明 scene 成员变量
+
     int powerCounter = 1;   // 电源编号
     int switchCounter = 1;  // 开关编号
     char lampCounter = 'A'; // 灯泡编号
@@ -39,6 +45,7 @@ private:
     ClickableGraphicsView* lampView;
     ClickableGraphicsView* switchView;
     ClickableGraphicsView* powerView;
+
 
     QLabel* label1 = new QLabel;
     QLabel* label2 = new QLabel;

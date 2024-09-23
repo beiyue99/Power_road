@@ -10,6 +10,25 @@ void CircuitScene::addComponent(QGraphicsItem* component) {
     addItem(component); // 将元件添加到场景中
 }
 
+
+
+CircuitComponent* CircuitScene::getSelectedComponent() {
+    QList<QGraphicsItem*> selectedItems = this->selectedItems();
+    for (QGraphicsItem* item : selectedItems) {
+        if (CircuitComponent* component = dynamic_cast<CircuitComponent*>(item)) {
+            return component;  // 返回第一个选中的CircuitComponent
+        }
+    }
+    return nullptr;  // 如果没有选中的CircuitComponent，则返回nullptr
+}
+
+
+
+
+
+
+
+
 void CircuitScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     // 获取点击的 item
     QGraphicsItem* item = itemAt(event->scenePos(), QTransform());

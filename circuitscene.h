@@ -14,7 +14,7 @@ class CircuitScene : public QGraphicsScene {
 public:
     explicit CircuitScene(QObject* parent = nullptr);
     void addComponent(QGraphicsItem* component); // 添加元件到场景
-
+    CircuitComponent* getSelectedComponent() ;
 signals:
     void itemClicked(CircuitComponent* component);
 

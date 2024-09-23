@@ -19,7 +19,7 @@ public:
 
     QString getName() const { return m_name; }
     QString getType() const { return m_type; }
-
+    void setRotation(double angle) ;
 
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) ;
@@ -27,6 +27,8 @@ private:
     QString m_name;
     QString m_type;
 };
+
+
 
 
 CircuitComponent* createLamp(char label);

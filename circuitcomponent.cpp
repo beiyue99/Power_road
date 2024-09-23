@@ -1,6 +1,21 @@
 #include "circuitcomponent.h"
 
 
+
+
+void CircuitComponent::setRotation(double angle) {
+    // 使用 QGraphicsItem 的 setRotation 方法
+    QGraphicsItemGroup::setRotation(angle);
+    // 确保更新视觉效果
+    update();
+}
+
+
+
+
+
+
+
 CircuitComponent::CircuitComponent(const QString& name, const QString& type, QGraphicsItem* parent)
     : QGraphicsItemGroup(parent), m_name(name), m_type(type) {
     setFlag(QGraphicsItem::ItemIsMovable);
