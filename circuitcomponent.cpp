@@ -4,7 +4,7 @@
 
 
 void CircuitComponent::setRotation(double angle) {
-    // 使用 QGraphicsItem 的 setRotation 方法
+
     QGraphicsItemGroup::setRotation(angle);
     // 确保更新视觉效果
     update();

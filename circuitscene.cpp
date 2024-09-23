@@ -16,7 +16,7 @@ CircuitComponent* CircuitScene::getSelectedComponent() {
     QList<QGraphicsItem*> selectedItems = this->selectedItems();
     for (QGraphicsItem* item : selectedItems) {
         if (CircuitComponent* component = dynamic_cast<CircuitComponent*>(item)) {
-            return component;  // 返回第一个选中的CircuitComponent
+            return component;
         }
     }
     return nullptr;  // 如果没有选中的CircuitComponent，则返回nullptr

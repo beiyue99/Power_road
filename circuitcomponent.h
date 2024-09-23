@@ -20,8 +20,10 @@ public:
     QString getName() const { return m_name; }
     QString getType() const { return m_type; }
     void setRotation(double angle) ;
+    // 使用 父类QGraphicsItemGroup 的 setRotation 方法，实现整个组的旋转
 
 protected:
+    //重写绘制函数，当绘制不同形状，使用不同的画笔
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) ;
 private:
     QString m_name;
