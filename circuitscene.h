@@ -13,13 +13,16 @@ class CircuitScene : public QGraphicsScene {
 
 public:
     explicit CircuitScene(QObject* parent = nullptr);
-    void addComponent(QGraphicsItem* component); // 添加元件到场景
+    void addComponent(CircuitComponent* component); // 添加元件到场景
     CircuitComponent* getSelectedComponent() ;  //返回当前被选择的元件组
+    QList<CircuitComponent*> getAllComponents(); // 声明获取所有元件的方法
 signals:
     void itemClicked(CircuitComponent* component);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+private:
+     QList<CircuitComponent*> components; // 存储场景中所有元件的容器
 };
 
 #endif // CIRCUITSCENE_H

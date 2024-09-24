@@ -32,6 +32,8 @@ public slots:
     void handleDisconnect() ;
     void handleConnect() ;
     void setupConnections();
+    void updateComboBoxes(CircuitComponent* currentSwitch) ;
+    void clearComboBoxes() ;
 private:
     CircuitScene* scene; // 声明 scene 成员变量
 

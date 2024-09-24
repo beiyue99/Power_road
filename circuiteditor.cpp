@@ -169,28 +169,38 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
 
 
     setupConnections();
+    clearComboBoxes();
 }
 
 
 void CircuitEditor::setupConnections() {
     connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
         // 创建新的灯泡并添加到场景
-        scene->addItem(createLamp(lampCounter++));
+        CircuitComponent* newLamp = createLamp(lampCounter++);
+        scene->addComponent(newLamp);
+        updateComboBoxes(newLamp); // 更新ComboBox选项
     });
 
     connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
         // 创建新的开关并添加到场景
-        scene->addItem(createSwitch(switchCounter++));
+        CircuitComponent* newSwitch = createSwitch(switchCounter++);
+        scene->addComponent(newSwitch);
+        updateComboBoxes(newSwitch); // 更新ComboBox选项
     });
 
     connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
         // 创建新的电源并添加到场景
-        scene->addItem(createPower(powerCounter++));
+        CircuitComponent* newPower = createPower(powerCounter++);
+        scene->addComponent(newPower);
+        updateComboBoxes(newPower); // 更新ComboBox选项
     });
 
-    connect(scene, &CircuitScene::itemClicked, this, &CircuitEditor::updateComponentDetails);
 
-    // 连接旋转角度信号
+      connect(scene, &CircuitScene::itemClicked, this, [this](CircuitComponent* component) {
+          updateComponentDetails(component);
+          updateComboBoxes(component); // 更新ComboBox选项
+      });
+
     connect(rotationEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onRotationChanged);
 
     // 连接开关状态控制按钮
@@ -281,12 +291,77 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
     comboBox4->setVisible(isSwitch);
     comboBox5->setVisible(isSwitch);
     comboBox6->setVisible(isSwitch);
+    // 更新连接元件的 comboBox
+    if (isSwitch) {
+        updateComboBoxes(component); // 更新连接元件的选项
+    } else {
+        clearComboBoxes(); // 清空 comboBox
+    }
+}
+
+
+void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
+    // 清空现有的选项
+    comboBox1->clear();
+    comboBox2->clear();
+    comboBox3->clear();
+    comboBox4->clear();
+    comboBox5->clear();
+    comboBox6->clear();
+
+    // 获取当前电路中的所有元件
+    QList<CircuitComponent*> allComponents = scene->getAllComponents();
+
+    // 获取当前选中的元件名称
+    QString selectedComponentName = component->getName();
+
+    // 为开关提供1端和2端的相同选项
+    for (CircuitComponent* comp : allComponents) {
+        if (comp->getName() != selectedComponentName) { // 排除自己
+            // 对于开关，提供1端和2端的选项
+            if (comp->getType() == "开关") {
+                comboBox1->addItem(comp->getName() + "-1端");
+                comboBox1->addItem(comp->getName() + "-2端");
+                comboBox2->addItem(comp->getName() + "-1端");
+                comboBox2->addItem(comp->getName() + "-2端");
+                comboBox3->addItem(comp->getName() + "-1端");
+                comboBox3->addItem(comp->getName() + "-2端");
+                comboBox4->addItem(comp->getName() + "-1端");
+                comboBox4->addItem(comp->getName() + "-2端");
+                comboBox5->addItem(comp->getName() + "-1端");
+                comboBox5->addItem(comp->getName() + "-2端");
+                comboBox6->addItem(comp->getName() + "-1端");
+                comboBox6->addItem(comp->getName() + "-2端");
+            }
+        }
+    }
+
+    // 对于灯泡和电源，只添加名称，保持每个ComboBox的选择内容一致
+    for (CircuitComponent* comp : allComponents) {
+        if (comp->getName() != selectedComponentName) { // 排除自己
+            if (comp->getType() != "开关") {
+                comboBox1->addItem(comp->getName());
+                comboBox2->addItem(comp->getName());
+                comboBox3->addItem(comp->getName());
+                comboBox4->addItem(comp->getName());
+                comboBox5->addItem(comp->getName());
+                comboBox6->addItem(comp->getName());
+            }
+        }
+    }
 }
 
 
 
 
-
+void CircuitEditor::clearComboBoxes() {
+    comboBox1->clear();
+    comboBox2->clear();
+    comboBox3->clear();
+    comboBox4->clear();
+    comboBox5->clear();
+    comboBox6->clear();
+}
 
 
 

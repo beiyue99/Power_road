@@ -6,10 +6,13 @@ CircuitScene::CircuitScene(QObject* parent)
     : QGraphicsScene(parent) {
 }
 
-void CircuitScene::addComponent(QGraphicsItem* component) {
+
+
+
+void CircuitScene::addComponent(CircuitComponent* component) {
+    components.append(component); // 将元件添加到容器
     addItem(component); // 将元件添加到场景中
 }
-
 
 
 CircuitComponent* CircuitScene::getSelectedComponent() {
@@ -20,6 +23,11 @@ CircuitComponent* CircuitScene::getSelectedComponent() {
         }
     }
     return nullptr;  // 如果没有选中的CircuitComponent，则返回nullptr
+}
+
+QList<CircuitComponent *> CircuitScene::getAllComponents()
+{
+     return components; // 返回存储元件的容器
 }
 
 
