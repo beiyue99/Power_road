@@ -161,54 +161,59 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     comboBox4->setVisible(false);
     comboBox5->setVisible(false);
     comboBox6->setVisible(false);
-
-
-
-
     // 将布局加入主布局中
     mainLayout->addLayout(leftLayout, 1); // 左侧电路元件按钮布局
     mainLayout->addWidget(view, 4);       // 中间电路编辑区
     mainLayout->addLayout(rightLayout, 1); // 右侧元件详细信息布局
 
-    // 点击事件：添加带编号的元件到中间电路区域
-    connect(lampView, &ClickableGraphicsView::clicked, [this]() {
+
+
+    setupConnections();
+}
+
+
+void CircuitEditor::setupConnections() {
+    connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
+        // 创建新的灯泡并添加到场景
         scene->addItem(createLamp(lampCounter++));
     });
 
-    connect(switchView, &ClickableGraphicsView::clicked, [this]() {
+    connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
+        // 创建新的开关并添加到场景
         scene->addItem(createSwitch(switchCounter++));
     });
 
-    connect(powerView, &ClickableGraphicsView::clicked, [this]() {
+    connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
+        // 创建新的电源并添加到场景
         scene->addItem(createPower(powerCounter++));
     });
 
     connect(scene, &CircuitScene::itemClicked, this, &CircuitEditor::updateComponentDetails);
 
-    // 在构造函数中连接旋转角度的信号
+    // 连接旋转角度信号
     connect(rotationEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onRotationChanged);
 
-
-
-
-
-    connect(disconnectButton, &QPushButton::clicked, this, [this]() {
-        CircuitComponent* selectedComponent = scene->getSelectedComponent();
-        if (selectedComponent && selectedComponent->getType() == "开关") {
-            selectedComponent->setClosed(false);  // 设置为断开状态
-        }
-    });
-
-    connect(connectButton, &QPushButton::clicked, this, [this]() {
-        CircuitComponent* selectedComponent = scene->getSelectedComponent();
-        if (selectedComponent && selectedComponent->getType() == "开关") {
-            selectedComponent->setClosed(true);  // 设置为闭合状态
-        }
-    });
+    // 连接开关状态控制按钮
+    connect(disconnectButton, &QPushButton::clicked, this, &CircuitEditor::handleDisconnect);
+    connect(connectButton, &QPushButton::clicked, this, &CircuitEditor::handleConnect);
 }
 
 
 
+
+void CircuitEditor::handleDisconnect() {
+    CircuitComponent* selectedComponent = scene->getSelectedComponent();
+    if (selectedComponent && selectedComponent->getType() == "开关") {
+        selectedComponent->setClosed(false);  // 设置为断开状态
+    }
+}
+
+void CircuitEditor::handleConnect() {
+    CircuitComponent* selectedComponent = scene->getSelectedComponent();
+    if (selectedComponent && selectedComponent->getType() == "开关") {
+        selectedComponent->setClosed(true);  // 设置为闭合状态
+    }
+}
 
 
 
@@ -229,19 +234,43 @@ void CircuitEditor::onRotationChanged() {
 
 
 
-
 void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
-    nameLabel->setText(component->getName());
-    nameLabel->setAlignment(Qt::AlignCenter);  // 确保居中对齐
-    rotationEdit->setText(QString::number(component->rotation()));
-    posXEdit->setText(QString::number(component->pos().x()));
-    posYEdit->setText(QString::number(component->pos().y()));
-    typeLabel->setText("类型：" + component->getType());
-    typeLabel->setAlignment(Qt::AlignCenter);  // 确保居中对齐
+    if (!component) return;  // 检查是否为有效指针
+
+    // 更新元件名称
+    QString newName = component->getName();
+    if (nameLabel->text() != newName) {
+        nameLabel->setText(newName);
+        nameLabel->setAlignment(Qt::AlignCenter);  // 确保居中对齐
+    }
+
+    // 更新旋转角度
+    double rotation = component->rotation();
+    if (rotationEdit->text() != QString::number(rotation)) {
+        rotationEdit->setText(QString::number(rotation));
+    }
+
+    // 更新位置X
+    double posX = component->pos().x();
+    if (posXEdit->text() != QString::number(posX)) {
+        posXEdit->setText(QString::number(posX));
+    }
+
+    // 更新位置Y
+    double posY = component->pos().y();
+    if (posYEdit->text() != QString::number(posY)) {
+        posYEdit->setText(QString::number(posY));
+    }
+
+    // 更新元件类型
+    QString newType = component->getType();
+    if (typeLabel->text() != "类型：" + newType) {
+        typeLabel->setText("类型：" + newType);
+        typeLabel->setAlignment(Qt::AlignCenter);  // 确保居中对齐
+    }
 
     // 根据类型显示或隐藏按钮和 comboBox
-    bool isSwitch = component->getType() == "开关";
-
+    bool isSwitch = (newType == "开关");
     disconnectButton->setVisible(isSwitch);
     connectButton->setVisible(isSwitch);
     label1->setVisible(isSwitch);
@@ -253,6 +282,7 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
     comboBox5->setVisible(isSwitch);
     comboBox6->setVisible(isSwitch);
 }
+
 
 
 

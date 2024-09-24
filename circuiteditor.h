@@ -29,8 +29,9 @@ public:
 public slots:
     void updateComponentDetails(CircuitComponent* component);
     void onRotationChanged();
-
-
+    void handleDisconnect() ;
+    void handleConnect() ;
+    void setupConnections();
 private:
     CircuitScene* scene; // 声明 scene 成员变量
 
