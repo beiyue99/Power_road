@@ -173,7 +173,6 @@ CircuitEditor::CircuitEditor(QWidget *parent)
     mainLayout->addWidget(rightWidget, 0); // 右侧元件详细信息布局
 
     setupConnections();
-    clearComboBoxes();
 
 }
 
@@ -185,21 +184,21 @@ void CircuitEditor::setupConnections() {
             // 创建新的灯泡并添加到场景
             CircuitComponent* newLamp = createLamp(lampCounter++);
             scene->addComponent(newLamp);
-            clearComboBoxes(); // 确保 ComboBox 是空的
+
         });
 
         connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
             // 创建新的开关并添加到场景
             CircuitComponent* newSwitch = createSwitch(switchCounter++);
             scene->addComponent(newSwitch);
-            clearComboBoxes(); // 确保 ComboBox 是空的
+
         });
 
         connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
             // 创建新的电源并添加到场景
             CircuitComponent* newPower = createPower(powerCounter++);
             scene->addComponent(newPower);
-            clearComboBoxes(); // 确保 ComboBox 是空的
+
         });
 
 
@@ -301,78 +300,68 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
     // 更新连接元件的 comboBox
     if (isSwitch) {
         updateComboBoxes(component); // 更新连接元件的选项
-    } else {
-//        clearComboBoxes(); // 清空 comboBox
     }
 }
 
 
 void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
-
-
     // 清空现有的选项
-    comboBox1->clear();
-    comboBox2->clear();
-    comboBox3->clear();
-    comboBox4->clear();
-    comboBox5->clear();
-    comboBox6->clear();
 
-    // 获取当前电路中的所有元件
-    QList<CircuitComponent*> allComponents = scene->getAllComponents();
+    clearComboBoxes();
 
-    // 获取当前选中的元件名称
-    QString selectedComponentName = component->getName();
-    qDebug()<<"当前选中的元件是"<<selectedComponentName;
     comboBox1->addItem("");
     comboBox2->addItem("");
     comboBox3->addItem("");
     comboBox4->addItem("");
     comboBox5->addItem("");
     comboBox6->addItem("");
+    // 获取当前电路中的所有元件
+    QList<CircuitComponent*> allComponents = scene->getAllComponents();
+    QString selectedComponentName = component->getName();
 
-    comboBox1->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
-    comboBox2->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
-    comboBox3->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
-    comboBox4->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
-    comboBox5->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
-    comboBox6->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
 
-    // 为开关提供1端和2端的相同选项
+
+
+    // 获取已选择的元件名称
+    QStringList selectedComponents;
+    selectedComponents << comboBox1->currentText()
+                       << comboBox2->currentText()
+                       << comboBox3->currentText()
+                       << comboBox4->currentText()
+                       << comboBox5->currentText()
+                       << comboBox6->currentText();
+
+    // 添加选项
     for (CircuitComponent* comp : allComponents) {
         if (comp->getName() != selectedComponentName) { // 排除自己
-            // 对于开关，提供1端和2端的选项
-            if (comp->getType() == "开关") {
-                comboBox1->addItem(comp->getName() + "-1端");
-                comboBox1->addItem(comp->getName() + "-2端");
-                comboBox2->addItem(comp->getName() + "-1端");
-                comboBox2->addItem(comp->getName() + "-2端");
-                comboBox3->addItem(comp->getName() + "-1端");
-                comboBox3->addItem(comp->getName() + "-2端");
-                comboBox4->addItem(comp->getName() + "-1端");
-                comboBox4->addItem(comp->getName() + "-2端");
-                comboBox5->addItem(comp->getName() + "-1端");
-                comboBox5->addItem(comp->getName() + "-2端");
-                comboBox6->addItem(comp->getName() + "-1端");
-                comboBox6->addItem(comp->getName() + "-2端");
-            }
-        }
-    }
-
-    // 对于灯泡和电源，只添加名称，保持每个ComboBox的选择内容一致
-    for (CircuitComponent* comp : allComponents) {
-        if (comp->getName() != selectedComponentName) { // 排除自己
-            if (comp->getType() != "开关") {
-                comboBox1->addItem(comp->getName());
-                comboBox2->addItem(comp->getName());
-                comboBox3->addItem(comp->getName());
-                comboBox4->addItem(comp->getName());
-                comboBox5->addItem(comp->getName());
-                comboBox6->addItem(comp->getName());
+            // 检查是否已被选择
+            if (!selectedComponents.contains(comp->getName())) {
+                if (comp->getType() == "开关") {
+                    comboBox1->addItem(comp->getName() + "-1端");
+                    comboBox1->addItem(comp->getName() + "-2端");
+                    comboBox2->addItem(comp->getName() + "-1端");
+                    comboBox2->addItem(comp->getName() + "-2端");
+                    comboBox3->addItem(comp->getName() + "-1端");
+                    comboBox3->addItem(comp->getName() + "-2端");
+                    comboBox4->addItem(comp->getName() + "-1端");
+                    comboBox4->addItem(comp->getName() + "-2端");
+                    comboBox5->addItem(comp->getName() + "-1端");
+                    comboBox5->addItem(comp->getName() + "-2端");
+                    comboBox6->addItem(comp->getName() + "-1端");
+                    comboBox6->addItem(comp->getName() + "-2端");
+                } else {
+                    comboBox1->addItem(comp->getName());
+                    comboBox2->addItem(comp->getName());
+                    comboBox3->addItem(comp->getName());
+                    comboBox4->addItem(comp->getName());
+                    comboBox5->addItem(comp->getName());
+                    comboBox6->addItem(comp->getName());
+                }
             }
         }
     }
 }
+
 
 
 
