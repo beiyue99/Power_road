@@ -15,7 +15,7 @@
 #include <QFrame>
 #include <QStringList>
 #include "clickablegraphicsview.h"
-#include "componentfactory.h"
+
 #include "circuitcomponent.h"
 
 class CircuitScene;

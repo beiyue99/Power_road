@@ -3,11 +3,16 @@
 #include "circuitscene.h"  // 添加这一行
 #include <QFrame>
 
-CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1), switchCounter(1), lampCounter('A') {
+CircuitEditor::CircuitEditor(QWidget *parent)
+    : QWidget(parent), powerCounter(1), switchCounter(1), lampCounter('A') {
     // 创建主布局：水平布局
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
+
     // 左侧布局：电路元件按钮，图形在上，名字在下
-    QVBoxLayout* leftLayout = new QVBoxLayout();
+    QWidget* leftWidget = new QWidget(this);
+    leftWidget->setFixedSize(110, 500); // 设置固定大小
+    QVBoxLayout* leftLayout = new QVBoxLayout(leftWidget);
+
     // 灯泡部分
     QVBoxLayout* lampLayout = new QVBoxLayout();
     QLabel* lampLabel = new QLabel("灯泡");
@@ -54,9 +59,12 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     QGraphicsView* view = new QGraphicsView(this);
     scene = new CircuitScene(this);
     view->setScene(scene);
+    view->setMinimumWidth(800); // 设置最小宽度为400像素
 
     // 右侧布局：元件详细信息
-    QVBoxLayout* rightLayout = new QVBoxLayout();
+    QWidget* rightWidget = new QWidget(this);
+    rightWidget->setFixedSize(150, 500); // 设置固定大小
+    QVBoxLayout* rightLayout = new QVBoxLayout(rightWidget);
 
     // 第一行：元件名称
     nameLabel = new QLabel("元件名称");
@@ -111,9 +119,6 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     separator->setFrameShadow(QFrame::Sunken); // 可选的，设置阴影效果
     rightLayout->addWidget(separator);
 
-
-
-
     // 创建布局
     QVBoxLayout* comboxLayout = new QVBoxLayout();
 
@@ -161,16 +166,16 @@ CircuitEditor::CircuitEditor(QWidget *parent) : QWidget(parent), powerCounter(1)
     comboBox4->setVisible(false);
     comboBox5->setVisible(false);
     comboBox6->setVisible(false);
+
     // 将布局加入主布局中
-    mainLayout->addLayout(leftLayout, 1); // 左侧电路元件按钮布局
-    mainLayout->addWidget(view, 4);       // 中间电路编辑区
-    mainLayout->addLayout(rightLayout, 1); // 右侧元件详细信息布局
-
-
+    mainLayout->addWidget(leftWidget, 0); // 左侧电路元件按钮布局
+    mainLayout->addWidget(view, 5);       // 中间电路编辑区，设置权重为 3
+    mainLayout->addWidget(rightWidget, 0); // 右侧元件详细信息布局
 
     setupConnections();
     clearComboBoxes();
 }
+
 
 
 void CircuitEditor::setupConnections() {
