@@ -305,62 +305,81 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
 
 
 void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
-    // 清空现有的选项
+    // 保存当前选中的选项
+    QString currentComboBox1 = comboBox1->currentText();
+    QString currentComboBox2 = comboBox2->currentText();
+    QString currentComboBox3 = comboBox3->currentText();
+    QString currentComboBox4 = comboBox4->currentText();
+    QString currentComboBox5 = comboBox5->currentText();
+    QString currentComboBox6 = comboBox6->currentText();
 
-    clearComboBoxes();
-
-    comboBox1->addItem("");
-    comboBox2->addItem("");
-    comboBox3->addItem("");
-    comboBox4->addItem("");
-    comboBox5->addItem("");
-    comboBox6->addItem("");
     // 获取当前电路中的所有元件
     QList<CircuitComponent*> allComponents = scene->getAllComponents();
     QString selectedComponentName = component->getName();
 
+    // 清空选项之前先保留已有的合法选择
+    QStringList validOptions1, validOptions2, validOptions3, validOptions4, validOptions5, validOptions6;
 
+    // 添加空选项
+    validOptions1 << "";
+    validOptions2 << "";
+    validOptions3 << "";
+    validOptions4 << "";
+    validOptions5 << "";
+    validOptions6 << "";
 
-
-    // 获取已选择的元件名称
-    QStringList selectedComponents;
-    selectedComponents << comboBox1->currentText()
-                       << comboBox2->currentText()
-                       << comboBox3->currentText()
-                       << comboBox4->currentText()
-                       << comboBox5->currentText()
-                       << comboBox6->currentText();
-
-    // 添加选项
+    // 添加元件的选项
     for (CircuitComponent* comp : allComponents) {
         if (comp->getName() != selectedComponentName) { // 排除自己
-            // 检查是否已被选择
-            if (!selectedComponents.contains(comp->getName())) {
-                if (comp->getType() == "开关") {
-                    comboBox1->addItem(comp->getName() + "-1端");
-                    comboBox1->addItem(comp->getName() + "-2端");
-                    comboBox2->addItem(comp->getName() + "-1端");
-                    comboBox2->addItem(comp->getName() + "-2端");
-                    comboBox3->addItem(comp->getName() + "-1端");
-                    comboBox3->addItem(comp->getName() + "-2端");
-                    comboBox4->addItem(comp->getName() + "-1端");
-                    comboBox4->addItem(comp->getName() + "-2端");
-                    comboBox5->addItem(comp->getName() + "-1端");
-                    comboBox5->addItem(comp->getName() + "-2端");
-                    comboBox6->addItem(comp->getName() + "-1端");
-                    comboBox6->addItem(comp->getName() + "-2端");
-                } else {
-                    comboBox1->addItem(comp->getName());
-                    comboBox2->addItem(comp->getName());
-                    comboBox3->addItem(comp->getName());
-                    comboBox4->addItem(comp->getName());
-                    comboBox5->addItem(comp->getName());
-                    comboBox6->addItem(comp->getName());
-                }
+            if (comp->getType() == "开关") {
+                validOptions1 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions2 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions3 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions4 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions5 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions6 << comp->getName() + "-1端" << comp->getName() + "-2端";
+            } else {
+                validOptions1 << comp->getName();
+                validOptions2 << comp->getName();
+                validOptions3 << comp->getName();
+                validOptions4 << comp->getName();
+                validOptions5 << comp->getName();
+                validOptions6 << comp->getName();
             }
         }
     }
+
+    // 仅当当前选项不再有效时才清空并重新设置
+    if (!validOptions1.contains(currentComboBox1)) currentComboBox1 = "";
+    if (!validOptions2.contains(currentComboBox2)) currentComboBox2 = "";
+    if (!validOptions3.contains(currentComboBox3)) currentComboBox3 = "";
+    if (!validOptions4.contains(currentComboBox4)) currentComboBox4 = "";
+    if (!validOptions5.contains(currentComboBox5)) currentComboBox5 = "";
+    if (!validOptions6.contains(currentComboBox6)) currentComboBox6 = "";
+
+    // 清空并重新填充 ComboBox
+    comboBox1->clear();
+    comboBox1->addItems(validOptions1);
+    comboBox2->clear();
+    comboBox2->addItems(validOptions2);
+    comboBox3->clear();
+    comboBox3->addItems(validOptions3);
+    comboBox4->clear();
+    comboBox4->addItems(validOptions4);
+    comboBox5->clear();
+    comboBox5->addItems(validOptions5);
+    comboBox6->clear();
+    comboBox6->addItems(validOptions6);
+
+    // 恢复之前的选项
+    comboBox1->setCurrentText(currentComboBox1);
+    comboBox2->setCurrentText(currentComboBox2);
+    comboBox3->setCurrentText(currentComboBox3);
+    comboBox4->setCurrentText(currentComboBox4);
+    comboBox5->setCurrentText(currentComboBox5);
+    comboBox6->setCurrentText(currentComboBox6);
 }
+
 
 
 
