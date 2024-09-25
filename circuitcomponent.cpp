@@ -2,6 +2,12 @@
 
 
 
+void CircuitComponent::setClosed(bool closed) {
+    m_isClosed = closed;  // 更新内部的闭合状态
+    updateSwitchAppearance();  // 更新开关外观
+}
+
+
 void CircuitComponent::updateSwitchAppearance() {
     QGraphicsLineItem* middleLine = nullptr;
 
@@ -36,6 +42,50 @@ void CircuitComponent::updateSwitchAppearance() {
     update();  // 更新显示
 }
 
+
+
+void CircuitComponent::setRotation(double angle) {
+
+    QGraphicsItemGroup::setRotation(angle);
+    // 确保更新视觉效果
+    update();
+}
+
+
+CircuitComponent::CircuitComponent(const QString& name, const QString& type, QGraphicsItem* parent)
+    : QGraphicsItemGroup(parent), m_name(name), m_type(type) {
+    setFlag(QGraphicsItem::ItemIsMovable);
+    setFlag(QGraphicsItem::ItemIsSelectable);
+    setHandlesChildEvents(false);
+}
+
+
+
+void CircuitComponent::paint(QPainter* painter,
+                             const QStyleOptionGraphicsItem* option, QWidget* widget) {
+    // 选中时将元件设置为红色
+    QPen pen;
+    if (isSelected()) {
+        pen = QPen(Qt::red, 2);              // 设置线条颜色为红色
+    } else {
+        pen = QPen(Qt::black, 2);                    // 默认线条颜色为黑色
+    }
+
+    // 绘制子项
+    for (QGraphicsItem* item : childItems()) {
+          painter->setPen(pen);
+          if (QGraphicsEllipseItem* ellipse = dynamic_cast<QGraphicsEllipseItem*>(item)) {
+              // 绘制椭圆
+              painter->drawEllipse(ellipse->rect());
+          } else if (QGraphicsLineItem* line = dynamic_cast<QGraphicsLineItem*>(item)) {
+              // 绘制线条
+              painter->drawLine(line->line());
+          } else if (QGraphicsPathItem* path = dynamic_cast<QGraphicsPathItem*>(item)) {
+              // 绘制“S”形路径
+              painter->drawPath(path->path());
+          }
+      }
+}
 
 
 
@@ -76,53 +126,11 @@ CircuitComponent* createSwitch(int number) {
 
 
 
-void CircuitComponent::setRotation(double angle) {
-
-    QGraphicsItemGroup::setRotation(angle);
-    // 确保更新视觉效果
-    update();
-}
 
 
 
 
 
-
-
-CircuitComponent::CircuitComponent(const QString& name, const QString& type, QGraphicsItem* parent)
-    : QGraphicsItemGroup(parent), m_name(name), m_type(type) {
-    setFlag(QGraphicsItem::ItemIsMovable);
-    setFlag(QGraphicsItem::ItemIsSelectable);
-    setHandlesChildEvents(false);
-}
-
-
-
-void CircuitComponent::paint(QPainter* painter,
-                             const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    // 选中时将元件设置为红色
-    QPen pen;
-    if (isSelected()) {
-        pen = QPen(Qt::red, 2);              // 设置线条颜色为红色
-    } else {
-        pen = QPen(Qt::black, 2);                    // 默认线条颜色为黑色
-    }
-
-    // 绘制子项
-    for (QGraphicsItem* item : childItems()) {
-          painter->setPen(pen);
-          if (QGraphicsEllipseItem* ellipse = dynamic_cast<QGraphicsEllipseItem*>(item)) {
-              // 绘制椭圆
-              painter->drawEllipse(ellipse->rect());
-          } else if (QGraphicsLineItem* line = dynamic_cast<QGraphicsLineItem*>(item)) {
-              // 绘制线条
-              painter->drawLine(line->line());
-          } else if (QGraphicsPathItem* path = dynamic_cast<QGraphicsPathItem*>(item)) {
-              // 绘制“S”形路径
-              painter->drawPath(path->path());
-          }
-      }
-}
 
 
 

@@ -174,37 +174,39 @@ CircuitEditor::CircuitEditor(QWidget *parent)
 
     setupConnections();
     clearComboBoxes();
+
 }
 
 
 
 void CircuitEditor::setupConnections() {
-    connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
-        // 创建新的灯泡并添加到场景
-        CircuitComponent* newLamp = createLamp(lampCounter++);
-        scene->addComponent(newLamp);
-        updateComboBoxes(newLamp); // 更新ComboBox选项
-    });
 
-    connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
-        // 创建新的开关并添加到场景
-        CircuitComponent* newSwitch = createSwitch(switchCounter++);
-        scene->addComponent(newSwitch);
-        updateComboBoxes(newSwitch); // 更新ComboBox选项
-    });
+        connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
+            // 创建新的灯泡并添加到场景
+            CircuitComponent* newLamp = createLamp(lampCounter++);
+            scene->addComponent(newLamp);
+            clearComboBoxes(); // 确保 ComboBox 是空的
+        });
 
-    connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
-        // 创建新的电源并添加到场景
-        CircuitComponent* newPower = createPower(powerCounter++);
-        scene->addComponent(newPower);
-        updateComboBoxes(newPower); // 更新ComboBox选项
-    });
+        connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
+            // 创建新的开关并添加到场景
+            CircuitComponent* newSwitch = createSwitch(switchCounter++);
+            scene->addComponent(newSwitch);
+            clearComboBoxes(); // 确保 ComboBox 是空的
+        });
+
+        connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
+            // 创建新的电源并添加到场景
+            CircuitComponent* newPower = createPower(powerCounter++);
+            scene->addComponent(newPower);
+            clearComboBoxes(); // 确保 ComboBox 是空的
+        });
 
 
-      connect(scene, &CircuitScene::itemClicked, this, [this](CircuitComponent* component) {
-          updateComponentDetails(component);
-          updateComboBoxes(component); // 更新ComboBox选项
-      });
+        connect(scene, &CircuitScene::itemClicked, this, [this](CircuitComponent* component) {
+                updateComponentDetails(component);
+//
+            });
 
     connect(rotationEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onRotationChanged);
 
@@ -300,12 +302,14 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
     if (isSwitch) {
         updateComboBoxes(component); // 更新连接元件的选项
     } else {
-        clearComboBoxes(); // 清空 comboBox
+//        clearComboBoxes(); // 清空 comboBox
     }
 }
 
 
 void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
+
+
     // 清空现有的选项
     comboBox1->clear();
     comboBox2->clear();
@@ -319,6 +323,20 @@ void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
 
     // 获取当前选中的元件名称
     QString selectedComponentName = component->getName();
+    qDebug()<<"当前选中的元件是"<<selectedComponentName;
+    comboBox1->addItem("");
+    comboBox2->addItem("");
+    comboBox3->addItem("");
+    comboBox4->addItem("");
+    comboBox5->addItem("");
+    comboBox6->addItem("");
+
+    comboBox1->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
+    comboBox2->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
+    comboBox3->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
+    comboBox4->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
+    comboBox5->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
+    comboBox6->setItemData(0, true, Qt::UserRole - 1); // 设置为不可选择
 
     // 为开关提供1端和2端的相同选项
     for (CircuitComponent* comp : allComponents) {

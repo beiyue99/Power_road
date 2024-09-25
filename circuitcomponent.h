@@ -24,13 +24,11 @@ public:
 
     // 新增开关状态
     bool isClosed() const { return m_isClosed; }
-    void setClosed(bool closed) {
-        m_isClosed = closed;  // 更新内部的闭合状态
-        updateSwitchAppearance();  // 更新开关外观
-    }
+    void setClosed(bool closed) ;
     // 判断当前状态是水平还是垂直
     bool isVertical() const { return rotation() == 270 || rotation() == -90; }
-
+    // 更新开关的显示
+    void updateSwitchAppearance();
 protected:
     //重写绘制函数，当绘制不同形状，使用不同的画笔
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) ;
@@ -39,8 +37,7 @@ private:
     QString m_type;
     bool m_isClosed = false;
 
-    // 更新开关的显示
-    void updateSwitchAppearance();
+
 };
 
 
