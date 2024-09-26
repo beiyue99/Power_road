@@ -217,14 +217,6 @@ void CircuitEditor::setupConnections() {
     connect(disconnectButton, &QPushButton::clicked, this, &CircuitEditor::handleDisconnect);
     connect(connectButton, &QPushButton::clicked, this, &CircuitEditor::handleConnect);
 
-//    connect(comboBox1, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-//    connect(comboBox2, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-//    connect(comboBox3, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-//    connect(comboBox4, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-//    connect(comboBox5, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-//    connect(comboBox6, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-//    connect(scene, &CircuitScene::componentDragged, this, &CircuitEditor::updateComponentDetails);
-
 }
 
 
@@ -253,77 +245,6 @@ void CircuitEditor::comboBoxChanged() {
 
 
 
-
-
-//void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
-//    if (!component) {
-//        qDebug() << "传入的组件无效！";
-//        return;
-//    }
-
-//    if (component->getType() != "开关") {
-//        return;
-//    }
-
-//    // 获取当前的 comboBox 状态
-//    QStringList savedValues = switchComboBoxStates.value(component->getName(), QStringList({"", "", "", "", "", ""}));
-
-//    QStringList validOptions1, validOptions2, validOptions3, validOptions4, validOptions5, validOptions6;
-
-//    validOptions1 << "";
-//    validOptions2 << "";
-//    validOptions3 << "";
-//    validOptions4 << "";
-//    validOptions5 << "";
-//    validOptions6 << "";
-
-//    for (CircuitComponent* comp : scene->getAllComponents()) {
-//        if (comp->getName() != component->getName()) {  // 排除当前开关本身
-//            if (comp->getType() == "开关") {
-//                validOptions1 << comp->getName() + "-1端" << comp->getName() + "-2端";
-//                validOptions2 << comp->getName() + "-1端" << comp->getName() + "-2端";
-//                validOptions3 << comp->getName() + "-1端" << comp->getName() + "-2端";
-//                validOptions4 << comp->getName() + "-1端" << comp->getName() + "-2端";
-//                validOptions5 << comp->getName() + "-1端" << comp->getName() + "-2端";
-//                validOptions6 << comp->getName() + "-1端" << comp->getName() + "-2端";
-//            } else {
-//                validOptions1 << comp->getName();
-//                validOptions2 << comp->getName();
-//                validOptions3 << comp->getName();
-//                validOptions4 << comp->getName();
-//                validOptions5 << comp->getName();
-//                validOptions6 << comp->getName();
-//            }
-//        }
-//    }
-
-//    // 清空并重新填充 comboBox
-//    comboBox1->clear();
-//    comboBox1->addItems(validOptions1);
-//    comboBox2->clear();
-//    comboBox2->addItems(validOptions2);
-//    comboBox3->clear();
-//    comboBox3->addItems(validOptions3);
-//    comboBox4->clear();
-//    comboBox4->addItems(validOptions4);
-//    comboBox5->clear();
-//    comboBox5->addItems(validOptions5);
-//    comboBox6->clear();
-//    comboBox6->addItems(validOptions6);
-
-//    // 确保恢复已保存的选项
-//    comboBox1->setCurrentText(savedValues[0]);
-//    comboBox2->setCurrentText(savedValues[1]);
-//    comboBox3->setCurrentText(savedValues[2]);
-//    comboBox4->setCurrentText(savedValues[3]);
-//    comboBox5->setCurrentText(savedValues[4]);
-//    comboBox6->setCurrentText(savedValues[5]);
-
-//    // 打印出调试信息
-//    printSwitchComboBoxStates();
-//}
-
-
 void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
     if (!component) {
         qDebug() << "传入的组件无效！";
@@ -335,15 +256,22 @@ void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
     }
 
     // 获取当前的 comboBox 状态
-    QStringList savedValues = switchComboBoxStates.value(component->getName(), QStringList({"", "", "", "", "", ""}));
+    QStringList savedValues = switchComboBoxStates.value(component->getName(),
+                                                         QStringList({"", "", "", "", "", ""}));
 
     // 清空并重新填充 comboBox，但先断开信号连接，防止触发 comboBoxChanged
-    disconnect(comboBox1, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    disconnect(comboBox2, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    disconnect(comboBox3, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    disconnect(comboBox4, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    disconnect(comboBox5, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    disconnect(comboBox6, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox1, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox2, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox3, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox4, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox5, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox6, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
 
     QStringList validOptions1, validOptions2, validOptions3, validOptions4, validOptions5, validOptions6;
 
@@ -387,7 +315,6 @@ void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
     comboBox6->clear();
     comboBox6->addItems(validOptions6);
 
-    printSwitchComboBoxStates();
 
     // 重新设置之前选中的选项
     comboBox1->setCurrentText(savedValues[0]);
@@ -398,12 +325,18 @@ void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
     comboBox6->setCurrentText(savedValues[5]);
 
     // 重新连接信号
-    connect(comboBox1, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    connect(comboBox2, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    connect(comboBox3, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    connect(comboBox4, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    connect(comboBox5, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
-    connect(comboBox6, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox1, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox2, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox3, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox4, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox5, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox6, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
 }
 
 
@@ -415,8 +348,6 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
            qDebug() << "传入的组件无效！";
            return;  // 如果组件无效，提前返回
        }
-    qDebug()<<"点击的元件是"<<component->getName();
-
 
     // 更新元件名称
     QString newName = component->getName();
@@ -472,8 +403,6 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
 
 
 
-
-
 void CircuitEditor::handleDisconnect() {
     CircuitComponent* selectedComponent = scene->getSelectedComponent();
     if (selectedComponent && selectedComponent->getType() == "开关") {
@@ -490,7 +419,6 @@ void CircuitEditor::handleConnect() {
 
 
 
-
 void CircuitEditor::onRotationChanged() {
     bool ok;
     double angle = rotationEdit->text().toDouble(&ok);
@@ -503,13 +431,6 @@ void CircuitEditor::onRotationChanged() {
         }
     }
 }
-
-
-
-
-
-
-
 
 
 void CircuitEditor::clearComboBoxes() {
