@@ -62,3 +62,4 @@ void CircuitScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     // 保留默认的事件处理
     QGraphicsScene::mousePressEvent(event);
 }
+

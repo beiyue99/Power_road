@@ -172,6 +172,9 @@ CircuitEditor::CircuitEditor(QWidget *parent)
     mainLayout->addWidget(view, 5);       // 中间电路编辑区，设置权重为 3
     mainLayout->addWidget(rightWidget, 0); // 右侧元件详细信息布局
 
+
+
+
     setupConnections();
 
 }
@@ -179,6 +182,7 @@ CircuitEditor::CircuitEditor(QWidget *parent)
 
 
 void CircuitEditor::setupConnections() {
+
 
         connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
             // 创建新的灯泡并添加到场景
@@ -201,57 +205,141 @@ void CircuitEditor::setupConnections() {
 
         });
 
-
+        //点击电路中元件，更新右侧相关信息
         connect(scene, &CircuitScene::itemClicked, this, [this](CircuitComponent* component) {
                 updateComponentDetails(component);
-//
             });
 
+     //更新旋转角
     connect(rotationEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onRotationChanged);
 
     // 连接开关状态控制按钮
     connect(disconnectButton, &QPushButton::clicked, this, &CircuitEditor::handleDisconnect);
     connect(connectButton, &QPushButton::clicked, this, &CircuitEditor::handleConnect);
+
+    connect(comboBox1, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox2, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox3, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox4, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox5, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox6, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CircuitEditor::comboBoxChanged);
 }
 
 
 
 
-void CircuitEditor::handleDisconnect() {
+//combobox当前选择的东西被修改后，调这个函数更新保存开关和对应combobox状态的容器
+void CircuitEditor::comboBoxChanged() {
     CircuitComponent* selectedComponent = scene->getSelectedComponent();
-    if (selectedComponent && selectedComponent->getType() == "开关") {
-        selectedComponent->setClosed(false);  // 设置为断开状态
+    if (!selectedComponent) {
+        return;  // 如果没有选中的组件，提前返回
+    }
+
+    // 检查选中的组件是否为开关
+    if (selectedComponent->getType() == "开关") {
+        switchComboBoxStates[selectedComponent->getName()] = QStringList({
+            comboBox1->currentText(),
+            comboBox2->currentText(),
+            comboBox3->currentText(),
+            comboBox4->currentText(),
+            comboBox5->currentText(),
+            comboBox6->currentText()
+        });
     }
 }
 
-void CircuitEditor::handleConnect() {
-    CircuitComponent* selectedComponent = scene->getSelectedComponent();
-    if (selectedComponent && selectedComponent->getType() == "开关") {
-        selectedComponent->setClosed(true);  // 设置为闭合状态
+
+
+
+
+
+void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
+    if (!component) {
+        qDebug() << "传入的组件无效！";
+        return;  // 确保传入的组件有效
     }
-}
 
+    // 只更新开关的 comboBox
+    if (component->getType() != "开关") {
+        return;
+    }
 
+    // 获取当前的 comboBox 状态
 
+    QStringList savedValues = switchComboBoxStates.value(component->getName(), QStringList({"", "", "", "", "", ""}));
 
-void CircuitEditor::onRotationChanged() {
-    bool ok;
-    double angle = rotationEdit->text().toDouble(&ok);
-    if (ok) {
-        // 获取当前选中的元件
-        CircuitComponent* selectedComponent = scene->getSelectedComponent();
-        if (selectedComponent) {
-            selectedComponent->setRotation(angle); // 旋转指定角度
-            selectedComponent->update(); // 更新显示
+    // 清空并重新填充 comboBox
+    QStringList validOptions1, validOptions2, validOptions3, validOptions4, validOptions5, validOptions6;
+
+    // 添加空选项
+    validOptions1 << "";
+    validOptions2 << "";
+    validOptions3 << "";
+    validOptions4 << "";
+    validOptions5 << "";
+    validOptions6 << "";
+
+    // 添加元件的选项
+    for (CircuitComponent* comp : scene->getAllComponents()) {
+        if (comp->getName() != component->getName()) {  // 排除自己
+            if (comp->getType() == "开关") {
+                validOptions1 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions2 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions3 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions4 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions5 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                validOptions6 << comp->getName() + "-1端" << comp->getName() + "-2端";
+            } else {
+                validOptions1 << comp->getName();
+                validOptions2 << comp->getName();
+                validOptions3 << comp->getName();
+                validOptions4 << comp->getName();
+                validOptions5 << comp->getName();
+                validOptions6 << comp->getName();
+            }
         }
     }
+
+    // 清空并重新填充 comboBox
+    comboBox1->clear();
+    comboBox1->addItems(validOptions1);
+    comboBox2->clear();
+    comboBox2->addItems(validOptions2);
+    comboBox3->clear();
+    comboBox3->addItems(validOptions3);
+    comboBox4->clear();
+    comboBox4->addItems(validOptions4);
+    comboBox5->clear();
+    comboBox5->addItems(validOptions5);
+    comboBox6->clear();
+    comboBox6->addItems(validOptions6);
+
+
+    printSwitchComboBoxStates();
+
+
+    // 重新设置之前选中的选项
+    comboBox1->setCurrentText(savedValues[0]);
+    comboBox2->setCurrentText(savedValues[1]);
+    comboBox3->setCurrentText(savedValues[2]);
+    comboBox4->setCurrentText(savedValues[3]);
+    comboBox5->setCurrentText(savedValues[4]);
+    comboBox6->setCurrentText(savedValues[5]);
 }
+
+
 
 
 
 
 void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
-    if (!component) return;  // 检查是否为有效指针
+
+    if (!component) {
+           qDebug() << "传入的组件无效！";
+           return;  // 如果组件无效，提前返回
+       }
+    qDebug()<<"点击的元件是"<<component->getName();
+
 
     // 更新元件名称
     QString newName = component->getName();
@@ -297,88 +385,50 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
     comboBox4->setVisible(isSwitch);
     comboBox5->setVisible(isSwitch);
     comboBox6->setVisible(isSwitch);
+
     // 更新连接元件的 comboBox
     if (isSwitch) {
-        updateComboBoxes(component); // 更新连接元件的选项
+        updateComboBoxes(component);  // 更新连接元件的选项
     }
 }
 
 
-void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
-    // 保存当前选中的选项
-    QString currentComboBox1 = comboBox1->currentText();
-    QString currentComboBox2 = comboBox2->currentText();
-    QString currentComboBox3 = comboBox3->currentText();
-    QString currentComboBox4 = comboBox4->currentText();
-    QString currentComboBox5 = comboBox5->currentText();
-    QString currentComboBox6 = comboBox6->currentText();
 
-    // 获取当前电路中的所有元件
-    QList<CircuitComponent*> allComponents = scene->getAllComponents();
-    QString selectedComponentName = component->getName();
 
-    // 清空选项之前先保留已有的合法选择
-    QStringList validOptions1, validOptions2, validOptions3, validOptions4, validOptions5, validOptions6;
 
-    // 添加空选项
-    validOptions1 << "";
-    validOptions2 << "";
-    validOptions3 << "";
-    validOptions4 << "";
-    validOptions5 << "";
-    validOptions6 << "";
 
-    // 添加元件的选项
-    for (CircuitComponent* comp : allComponents) {
-        if (comp->getName() != selectedComponentName) { // 排除自己
-            if (comp->getType() == "开关") {
-                validOptions1 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions2 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions3 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions4 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions5 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions6 << comp->getName() + "-1端" << comp->getName() + "-2端";
-            } else {
-                validOptions1 << comp->getName();
-                validOptions2 << comp->getName();
-                validOptions3 << comp->getName();
-                validOptions4 << comp->getName();
-                validOptions5 << comp->getName();
-                validOptions6 << comp->getName();
-            }
+void CircuitEditor::handleDisconnect() {
+    CircuitComponent* selectedComponent = scene->getSelectedComponent();
+    if (selectedComponent && selectedComponent->getType() == "开关") {
+        selectedComponent->setClosed(false);  // 设置为断开状态
+    }
+}
+
+void CircuitEditor::handleConnect() {
+    CircuitComponent* selectedComponent = scene->getSelectedComponent();
+    if (selectedComponent && selectedComponent->getType() == "开关") {
+        selectedComponent->setClosed(true);  // 设置为闭合状态
+    }
+}
+
+
+
+
+void CircuitEditor::onRotationChanged() {
+    bool ok;
+    double angle = rotationEdit->text().toDouble(&ok);
+    if (ok) {
+        // 获取当前选中的元件
+        CircuitComponent* selectedComponent = scene->getSelectedComponent();
+        if (selectedComponent) {
+            selectedComponent->setRotation(angle); // 旋转指定角度
+            selectedComponent->update(); // 更新显示
         }
     }
-
-    // 仅当当前选项不再有效时才清空并重新设置
-    if (!validOptions1.contains(currentComboBox1)) currentComboBox1 = "";
-    if (!validOptions2.contains(currentComboBox2)) currentComboBox2 = "";
-    if (!validOptions3.contains(currentComboBox3)) currentComboBox3 = "";
-    if (!validOptions4.contains(currentComboBox4)) currentComboBox4 = "";
-    if (!validOptions5.contains(currentComboBox5)) currentComboBox5 = "";
-    if (!validOptions6.contains(currentComboBox6)) currentComboBox6 = "";
-
-    // 清空并重新填充 ComboBox
-    comboBox1->clear();
-    comboBox1->addItems(validOptions1);
-    comboBox2->clear();
-    comboBox2->addItems(validOptions2);
-    comboBox3->clear();
-    comboBox3->addItems(validOptions3);
-    comboBox4->clear();
-    comboBox4->addItems(validOptions4);
-    comboBox5->clear();
-    comboBox5->addItems(validOptions5);
-    comboBox6->clear();
-    comboBox6->addItems(validOptions6);
-
-    // 恢复之前的选项
-    comboBox1->setCurrentText(currentComboBox1);
-    comboBox2->setCurrentText(currentComboBox2);
-    comboBox3->setCurrentText(currentComboBox3);
-    comboBox4->setCurrentText(currentComboBox4);
-    comboBox5->setCurrentText(currentComboBox5);
-    comboBox6->setCurrentText(currentComboBox6);
 }
+
+
+
 
 
 

@@ -21,6 +21,7 @@ signals:
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
 private:
      QList<CircuitComponent*> components; // 存储场景中所有元件的容器
 };
