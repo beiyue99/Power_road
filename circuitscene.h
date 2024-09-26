@@ -18,12 +18,15 @@ public:
     QList<CircuitComponent*> getAllComponents(); // 声明获取所有元件的方法
 signals:
     void itemClicked(CircuitComponent* component);
-
+    void componentDragged(CircuitComponent* component);  // 新增信号
 protected:
+//    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
-
 private:
      QList<CircuitComponent*> components; // 存储场景中所有元件的容器
+      CircuitComponent* draggedComponent = nullptr;  // 当前拖拽的元件
 };
 
 #endif // CIRCUITSCENE_H
