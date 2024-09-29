@@ -26,7 +26,7 @@ public:
     bool isClosed() const { return m_isClosed; }
     void setClosed(bool closed) ;
     // 判断当前状态是水平还是垂直
-    bool isVertical() const { return rotation() == 270 || rotation() == -90; }
+//    bool isVertical() const { return rotation() == 270 || rotation() == -90; }
     // 更新开关的显示
     void updateSwitchAppearance();
 protected:
