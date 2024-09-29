@@ -240,7 +240,107 @@ void CircuitEditor::comboBoxChanged() {
             comboBox6->currentText()
         });
     }
+
+    // 清空并重新填充 comboBox，但先断开信号连接，防止触发 comboBoxChanged
+    disconnect(comboBox1, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox2, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox3, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox4, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox5, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+    disconnect(comboBox6, QOverload<int>::of(&QComboBox::currentIndexChanged),
+               this, &CircuitEditor::comboBoxChanged);
+
+    // 更新开关1
+    qDebug() << "更新开关1";
+    comboBox1->clear();
+    comboBox1->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(0).size(); i++){
+        if(m_ComboboxItems.at(0).at(i) == comboBox2->currentText() || m_ComboboxItems.at(0).at(i) == comboBox3->currentText() || m_ComboboxItems.at(0).at(i) == ""){
+        }else{
+            comboBox1->addItem(m_ComboboxItems.at(0).at(i));
+        }
+    }
+    qDebug() << switchComboBoxStates[selectedComponent->getName()].at(0);
+    comboBox1->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(0));
+    // 更新开关2
+    qDebug() << "更新开关2";
+    comboBox2->clear();
+    comboBox2->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(1).size(); i++){
+        if(m_ComboboxItems.at(1).at(i) == comboBox1->currentText() || m_ComboboxItems.at(1).at(i) == comboBox3->currentText() || m_ComboboxItems.at(1).at(i) == ""){
+        }else{
+            comboBox2->addItem(m_ComboboxItems.at(1).at(i));
+        }
+    }
+    comboBox2->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(1));
+    // 更新开关3
+    comboBox3->clear();
+    comboBox3->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(2).size(); i++){
+        if(m_ComboboxItems.at(2).at(i) == comboBox1->currentText() || m_ComboboxItems.at(2).at(i) == comboBox2->currentText() || m_ComboboxItems.at(2).at(i) == ""){
+        }else{
+            comboBox3->addItem(m_ComboboxItems.at(2).at(i));
+        }
+    }
+    comboBox3->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(2));
+
+
+
+    // 更新开关4
+    qDebug() << "更新开关4";
+    comboBox4->clear();
+    comboBox4->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(3).size(); i++){
+        if(m_ComboboxItems.at(3).at(i) == comboBox5->currentText() || m_ComboboxItems.at(3).at(i) == comboBox6->currentText() || m_ComboboxItems.at(0).at(i) == ""){
+        }else{
+            comboBox4->addItem(m_ComboboxItems.at(3).at(i));
+        }
+    }
+    qDebug() << switchComboBoxStates[selectedComponent->getName()].at(3);
+    comboBox4->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(3));
+    // 更新开关5
+    qDebug() << "更新开关5";
+    comboBox5->clear();
+    comboBox5->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(4).size(); i++){
+        if(m_ComboboxItems.at(4).at(i) == comboBox4->currentText() || m_ComboboxItems.at(4).at(i) == comboBox6->currentText() || m_ComboboxItems.at(4).at(i) == ""){
+        }else{
+            comboBox5->addItem(m_ComboboxItems.at(4).at(i));
+        }
+    }
+    comboBox5->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(4));
+    // 更新开关6
+    comboBox6->clear();
+    comboBox6->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(5).size(); i++){
+        if(m_ComboboxItems.at(5).at(i) == comboBox4->currentText() || m_ComboboxItems.at(5).at(i) == comboBox5->currentText() || m_ComboboxItems.at(5).at(i) == ""){
+        }else{
+            comboBox6->addItem(m_ComboboxItems.at(5).at(i));
+        }
+    }
+    comboBox6->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(5));
+
+    // 重新连接信号
+    connect(comboBox1, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox2, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox3, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox4, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox5, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+    connect(comboBox6, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CircuitEditor::comboBoxChanged);
+
 }
+
 
 
 
@@ -302,6 +402,7 @@ void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
         }
     }
 
+    m_ComboboxItems = {validOptions1, validOptions2, validOptions3, validOptions4, validOptions5, validOptions6};
     comboBox1->clear();
     comboBox1->addItems(validOptions1);
     comboBox2->clear();
@@ -322,6 +423,76 @@ void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
     comboBox3->setCurrentText(savedValues[2]);
     comboBox4->setCurrentText(savedValues[3]);
     comboBox5->setCurrentText(savedValues[4]);
+    comboBox6->setCurrentText(savedValues[5]);
+
+
+
+    // 更新开关1
+    qDebug() << "更新开关1";
+    comboBox1->clear();
+    comboBox1->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(0).size(); i++){
+        if(m_ComboboxItems.at(0).at(i) == comboBox2->currentText() || m_ComboboxItems.at(0).at(i) == comboBox3->currentText() || m_ComboboxItems.at(0).at(i) == ""){
+        }else{
+            comboBox1->addItem(m_ComboboxItems.at(0).at(i));
+        }
+    }
+    comboBox1->setCurrentText(savedValues[0]);
+    // 更新开关2
+    qDebug() << "更新开关2";
+    comboBox2->clear();
+    comboBox2->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(1).size(); i++){
+        if(m_ComboboxItems.at(1).at(i) == comboBox1->currentText() || m_ComboboxItems.at(1).at(i) == comboBox3->currentText() || m_ComboboxItems.at(1).at(i) == ""){
+        }else{
+            comboBox2->addItem(m_ComboboxItems.at(1).at(i));
+        }
+    }
+    comboBox2->setCurrentText(savedValues[1]);
+    // 更新开关3
+    comboBox3->clear();
+    comboBox3->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(2).size(); i++){
+        if(m_ComboboxItems.at(2).at(i) == comboBox1->currentText() || m_ComboboxItems.at(2).at(i) == comboBox2->currentText() || m_ComboboxItems.at(2).at(i) == ""){
+        }else{
+            comboBox3->addItem(m_ComboboxItems.at(2).at(i));
+        }
+    }
+    comboBox3->setCurrentText(savedValues[2]);
+
+
+
+    // 更新开关4
+    qDebug() << "更新开关4";
+    comboBox4->clear();
+    comboBox4->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(3).size(); i++){
+        if(m_ComboboxItems.at(3).at(i) == comboBox5->currentText() || m_ComboboxItems.at(3).at(i) == comboBox6->currentText() || m_ComboboxItems.at(0).at(i) == ""){
+        }else{
+            comboBox4->addItem(m_ComboboxItems.at(3).at(i));
+        }
+    }
+    comboBox4->setCurrentText(savedValues[3]);
+    // 更新开关5
+    qDebug() << "更新开关5";
+    comboBox5->clear();
+    comboBox5->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(4).size(); i++){
+        if(m_ComboboxItems.at(4).at(i) == comboBox4->currentText() || m_ComboboxItems.at(4).at(i) == comboBox6->currentText() || m_ComboboxItems.at(4).at(i) == ""){
+        }else{
+            comboBox5->addItem(m_ComboboxItems.at(4).at(i));
+        }
+    }
+    comboBox5->setCurrentText(savedValues[4]);
+    // 更新开关6
+    comboBox6->clear();
+    comboBox6->addItem("");
+    for(int i = 0; i < m_ComboboxItems.at(5).size(); i++){
+        if(m_ComboboxItems.at(5).at(i) == comboBox4->currentText() || m_ComboboxItems.at(5).at(i) == comboBox5->currentText() || m_ComboboxItems.at(5).at(i) == ""){
+        }else{
+            comboBox6->addItem(m_ComboboxItems.at(5).at(i));
+        }
+    }
     comboBox6->setCurrentText(savedValues[5]);
 
     // 重新连接信号

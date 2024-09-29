@@ -1,6 +1,7 @@
 #ifndef CIRCUITEDITOR_H
 #define CIRCUITEDITOR_H
 #include "circuitscene.h"  // 确保这个路径是正确的
+#include <QVector>
 
 #include <QWidget>
 #include <QGraphicsView>
@@ -37,9 +38,11 @@ public slots:
     void comboBoxChanged() ;
 
 
+
 private:
     CircuitScene* scene; // 声明 scene 成员变量
     QMap<QString, QStringList> switchComboBoxStates; // 容器：记录每个开关及其 6 个 comboBox 的选项
+    QVector<QStringList> m_ComboboxItems;
 
     int powerCounter = 1;   // 电源编号
     int switchCounter = 1;  // 开关编号
