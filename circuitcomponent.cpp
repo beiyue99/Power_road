@@ -19,26 +19,15 @@ void CircuitComponent::updateSwitchAppearance() {
     }
 
     if (middleLine) {
-        // 根据旋转角度来决定闭合或断开的线条方向
-        if (isVertical()) {
-            if (m_isClosed) {
-                // 竖直状态下的闭合
-                middleLine->setLine(QLineF(5, 5, 55, 5));  // 竖直方向闭合
-            } else {
-                // 竖直状态下的断开，翘起30度
-                middleLine->setLine(QLineF(5, 5, 55, -10));  // 向上翘起30度
-            }
+
+        if (m_isClosed) {
+            // 水平状态下的闭合
+            middleLine->setLine(QLineF(5, 5, 55, 5));  // 水平方向闭合
         } else {
-            if (m_isClosed) {
-                // 水平状态下的闭合
-                middleLine->setLine(QLineF(5, 5, 55, 5));  // 水平方向闭合
-            } else {
-                // 水平状态下的断开，翘起30度
-                middleLine->setLine(QLineF(5, 5, 55, -10));  // 向上翘起30度
-            }
+            // 水平状态下的断开，翘起30度
+            middleLine->setLine(QLineF(5, 5, 55, -10));  // 向上翘起30度
         }
     }
-
     update();  // 更新显示
 }
 
