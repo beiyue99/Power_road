@@ -34,78 +34,46 @@ QList<CircuitComponent *> CircuitScene::getAllComponents()
 
 
 void CircuitScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    // 获取点击的 item
     QGraphicsItem* item = itemAt(event->scenePos(), QTransform());
-
-    // 确保点击的是一个有效的图元
     if (item) {
-        // 尝试将 item 转换为 CircuitComponent
         CircuitComponent* component = nullptr;
-        // 首先检查 item 是否已经是 CircuitComponent
         if ((component = dynamic_cast<CircuitComponent*>(item))) {
         } else if (item->parentItem()) {
             component = dynamic_cast<CircuitComponent*>(item->parentItem());
         }
 
-        // 如果找到了有效的 CircuitComponent
         if (component) {
-            QString itemName = component->getName();
-            QString itemType = component->getType();
             emit itemClicked(component);
+            isDragging = true; // 开始拖拽
         }
     }
-
-    // 保留默认的事件处理
     QGraphicsScene::mousePressEvent(event);
 }
 
-
-
-
-
-
-
-
-
-
-// 重载鼠标移动事件
 void CircuitScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
-    // 使用 event 的场景位置来获取当前鼠标下的图元 (QGraphicsItem)
-    QGraphicsItem* item = itemAt(event->scenePos(), QTransform());
-
-    // 如果鼠标下确实有一个图元 (item)
-    if (item) {
-        CircuitComponent* component = nullptr;
-
-        // 首先，检查 item 是否是 CircuitComponent 类型
-        // dynamic_cast 用于将 QGraphicsItem 转换为 CircuitComponent，如果转换成功，则表示 item 是 CircuitComponent
-        if ((component = dynamic_cast<CircuitComponent*>(item))) {
-            // 如果 item 是一个 CircuitComponent，则将其记录为当前被拖拽的组件
-            draggedComponent = component;
-            emit componentDragged(component);  // 发送信号
-        }
-        // 如果 item 不是 CircuitComponent，那么我们还可以检查它是否有父图元
-        else if (item->parentItem()) {
-            // 尝试将 item 的父图元转换为 CircuitComponent
-            component = dynamic_cast<CircuitComponent*>(item->parentItem());
-            // 如果父图元也是 CircuitComponent
-            if (component) {
-                // 记录父图元为当前拖拽的组件
+    if (isDragging) {
+        QGraphicsItem* item = itemAt(event->scenePos(), QTransform());
+        if (item) {
+            CircuitComponent* component = nullptr;
+            if ((component = dynamic_cast<CircuitComponent*>(item))) {
                 draggedComponent = component;
-                // 同样发送 componentDragged 信号，传递该组件
-                emit componentDragged(component);  // 发送信号
+                emit componentDragged(component);
+            } else if (item->parentItem()) {
+                component = dynamic_cast<CircuitComponent*>(item->parentItem());
+                if (component) {
+                    draggedComponent = component;
+                    emit componentDragged(component);
+                }
             }
         }
     }
-    // 调用父类的 mouseMoveEvent 来确保其他的默认鼠标移动行为正常处理
     QGraphicsScene::mouseMoveEvent(event);
 }
 
-
-
-// 重载鼠标释放事件
 void CircuitScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
-    // 在鼠标释放时，清空拖拽的元件
-    draggedComponent = nullptr;
-    QGraphicsScene::mouseReleaseEvent(event);  // 保留默认的事件处理
+    if (isDragging) {
+        isDragging = false; // 停止拖拽
+        draggedComponent = nullptr;
+    }
+    QGraphicsScene::mouseReleaseEvent(event);
 }

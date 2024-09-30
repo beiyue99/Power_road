@@ -184,29 +184,66 @@ CircuitEditor::CircuitEditor(QWidget *parent)
 void CircuitEditor::setupConnections() {
 
 
-        connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
-            // 创建新的灯泡并添加到场景
-            CircuitComponent* newLamp = createLamp(lampCounter++);
-            scene->addComponent(newLamp);
+//        connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
+//            // 创建新的灯泡并添加到场景
+//            CircuitComponent* newLamp = createLamp(lampCounter++);
+//            scene->addComponent(newLamp);
 
-        });
+//        });
 
-        connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
-            // 创建新的开关并添加到场景
-            CircuitComponent* newSwitch = createSwitch(switchCounter++);
-            scene->addComponent(newSwitch);
+//        connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
+//            // 创建新的开关并添加到场景
+//            CircuitComponent* newSwitch = createSwitch(switchCounter++);
+//            scene->addComponent(newSwitch);
 
-        });
+//        });
 
-        connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
-            // 创建新的电源并添加到场景
-            CircuitComponent* newPower = createPower(powerCounter++);
-            scene->addComponent(newPower);
+//        connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
+//            // 创建新的电源并添加到场景
+//            CircuitComponent* newPower = createPower(powerCounter++);
+//            scene->addComponent(newPower);
 
-        });
+//        });
+    connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
+           // 创建新的灯泡并添加到场景
+           CircuitComponent* newLamp = createLamp(lampCounter++);
+           scene->addComponent(newLamp);
+           // 清除当前选择的项
+           scene->clearSelection();
+           // 选中新添加的灯泡
+           newLamp->setSelected(true);
+           // 更新右侧信息
+           updateComponentDetails(newLamp);
+       });
 
+       connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
+           // 创建新的开关并添加到场景
+           CircuitComponent* newSwitch = createSwitch(switchCounter++);
+           scene->addComponent(newSwitch);
+           // 清除当前选择的项
+           scene->clearSelection();
+           // 选中新添加的开关
+           newSwitch->setSelected(true);
+           // 更新右侧信息
+           updateComponentDetails(newSwitch);
+       });
+
+       connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
+           // 创建新的电源并添加到场景
+           CircuitComponent* newPower = createPower(powerCounter++);
+           scene->addComponent(newPower);
+           // 清除当前选择的项
+           scene->clearSelection();
+           // 选中新添加的电源
+           newPower->setSelected(true);
+           // 更新右侧信息
+           updateComponentDetails(newPower);
+       });
         //点击电路中元件，更新右侧相关信息
         connect(scene, &CircuitScene::itemClicked, this, [this](CircuitComponent* component) {
+                updateComponentDetails(component);
+            });
+        connect(scene, &CircuitScene::componentDragged, this, [this](CircuitComponent* component) {
                 updateComponentDetails(component);
             });
 
