@@ -26,17 +26,18 @@ class CircuitEditor : public QWidget {
 
 public:
     CircuitEditor(QWidget* parent = nullptr);
-
+    void connectCMB();
+    void disconnectCMB();
+    void clearComboBoxes() ;
+    void setupConnections();
+    void updateComboBoxes(CircuitComponent* currentSwitch) ;
 public slots:
     void updateComponentDetails(CircuitComponent* component);
     void onRotationChanged();
     void handleDisconnect() ;
     void handleConnect() ;
-    void setupConnections();
-    void updateComboBoxes(CircuitComponent* currentSwitch) ;
-    void clearComboBoxes() ;
     void comboBoxChanged() ;
-
+    void updateCMB();
 
 
 private:

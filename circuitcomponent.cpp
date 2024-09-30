@@ -203,15 +203,19 @@ CircuitComponent* createLampWithoutLabel() {
     bulbOuterCircle->setFlag(QGraphicsItem::ItemIsMovable, false);
     lamp->addToGroup(bulbOuterCircle);
     // 绘制从圆周向外延伸的六条实线
-    for (int i = 0; i < 6; ++i) {
-        qreal angle = i * 60;  // 每条线相隔60度
-        qreal x1 = 20 + 20 * qCos(qDegreesToRadians(angle));  // 起点在圆周上
-        qreal y1 = 20 + 20 * qSin(qDegreesToRadians(angle));
-        qreal x2 = 20 + 30 * qCos(qDegreesToRadians(angle));  // 终点在圆外
-        qreal y2 = 20 + 30 * qSin(qDegreesToRadians(angle));
-        lamp->addToGroup(new QGraphicsLineItem(x1, y1, x2, y2, bulbOuterCircle));
-    }
-    lamp->setFlag(QGraphicsItem::ItemIsSelectable, true); // 确保整个组件可被选中
+        QPen pen(Qt::black, 2);  // 黑色实线，线宽为2
+        for (int i = 0; i < 6; ++i) {
+            qreal angle = i * 60;  // 每条线相隔60度
+            qreal x1 = 20 + 20 * qCos(qDegreesToRadians(angle));  // 起点在圆周上
+            qreal y1 = 20 + 20 * qSin(qDegreesToRadians(angle));
+            qreal x2 = 20 + 30 * qCos(qDegreesToRadians(angle));  // 终点在圆外
+            qreal y2 = 20 + 30 * qSin(qDegreesToRadians(angle));
+            QGraphicsLineItem* lineItem = new QGraphicsLineItem(x1, y1, x2, y2, bulbOuterCircle);
+            lineItem->setPen(pen);  // 设置线的颜色和宽度
+            lamp->addToGroup(lineItem);
+        }
+
+        lamp->setFlag(QGraphicsItem::ItemIsSelectable, true); // 确保整个组件可被选中
     return lamp;
 }
 
