@@ -74,7 +74,7 @@ void CircuitComponent::updateWires()
 QVariant CircuitComponent::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     if (change == ItemPositionHasChanged) {
-        qDebug() << "Item position changed:" << this->getName();
+
         updateWires();  // 更新连线
         emit positionChanged();  // 发射位置变化的信号
     }
@@ -92,7 +92,7 @@ void CircuitComponent::addToGroup(QGraphicsItem* item) {
 
 void CircuitComponent::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 {
-    qDebug() << "Component moved:" << getName();
+
     QGraphicsItemGroup::mouseMoveEvent(event);
     updateWires();  // 更新连线
     emit positionChanged();  // 发射位置变化的信号
@@ -133,8 +133,10 @@ CircuitComponent::CircuitComponent(const QString& name, const QString& type, QGr
     : QGraphicsItemGroup(parent), m_name(name), m_type(type) {
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges); // 这个标志确保位置变化时发送通知
     setHandlesChildEvents(false);
 }
+
 
 
 

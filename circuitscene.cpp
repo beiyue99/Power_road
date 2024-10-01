@@ -19,8 +19,10 @@ void CircuitScene::addComponent(CircuitComponent* component) {
 
     connect(component, &CircuitComponent::positionChanged, this, [this, component]() {
         emit componentMoved(component);
+        updateWires();  // 每当组件移动时，更新所有连线
     });
 }
+
 
 CircuitComponent* CircuitScene::getSelectedComponent() {
     QList<QGraphicsItem*> selectedItems = this->selectedItems();
