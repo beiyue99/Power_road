@@ -224,12 +224,22 @@ void CircuitEditor::setupConnections() {
                 updateComponentDetails(component);
             });
         connect(scene, &CircuitScene::componentDragged, this, [this](CircuitComponent* component) {
+
                 updateComponentDetails(component);
+                 component->updateWires(); // 更新连线位置
             });
+        // 点击非电路元件，更新右侧显示为默认状态
+          connect(scene, &CircuitScene::noItemClicked, this, [this]() {
+              clearComponentDetails();
+          });
+          connect(scene, &CircuitScene::componentMoved, this, [this](CircuitComponent* component) {
+              if (scene->getSelectedComponent() == component) {
+                  updateComponentDetails(component);
+              }
+          });
 
      //更新旋转角
     connect(rotationEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onRotationChanged);
-
     // 连接开关状态控制按钮
     connect(disconnectButton, &QPushButton::clicked, this, &CircuitEditor::handleDisconnect);
     connect(connectButton, &QPushButton::clicked, this, &CircuitEditor::handleConnect);
@@ -237,252 +247,178 @@ void CircuitEditor::setupConnections() {
 }
 
 
+void CircuitEditor::clearComponentDetails() {
+    // 清空右侧显示
+    nameLabel->setText("元件名称");
+    rotationEdit->clear();
+    posXEdit->clear();
+    posYEdit->clear();
+    typeLabel->setText("类型：");
+
+    // 隐藏按钮和 comboBox
+    disconnectButton->setVisible(false);
+    connectButton->setVisible(false);
+    label1->setVisible(false);
+    label2->setVisible(false);
+    comboBox1->setVisible(false);
+    comboBox2->setVisible(false);
+    comboBox3->setVisible(false);
+    comboBox4->setVisible(false);
+    comboBox5->setVisible(false);
+    comboBox6->setVisible(false);
+}
 
 
-//combobox当前选择的东西被修改后，调这个函数更新保存开关和对应combobox状态的容器
+
+
 void CircuitEditor::comboBoxChanged() {
     CircuitComponent* selectedComponent = scene->getSelectedComponent();
-    if (!selectedComponent) {
-        return;  // 如果没有选中的组件，提前返回
+    if (!selectedComponent || selectedComponent->getType() != "开关") {
+        return;
     }
 
-    // 检查选中的组件是否为开关
-    if (selectedComponent->getType() == "开关") {
-        switchComboBoxStates[selectedComponent->getName()] = QStringList({
-            comboBox1->currentText(),
-            comboBox2->currentText(),
-            comboBox3->currentText(),
-            comboBox4->currentText(),
-            comboBox5->currentText(),
-            comboBox6->currentText()
-        });
-    }
+    // 保存当前开关的组合框状态
+    switchComboBoxStates[selectedComponent->getName()] = QStringList{
+        comboBox1->currentText(),
+        comboBox2->currentText(),
+        comboBox3->currentText(),
+        comboBox4->currentText(),
+        comboBox5->currentText(),
+        comboBox6->currentText()
+    };
 
-    // 清空并重新填充 comboBox，但先断开信号连接，防止触发 comboBoxChanged
-    disconnectCMB();
+    // 更新连线
+    updateWiresForComponent(selectedComponent);
 
-    // 更新开关1
-
-    comboBox1->clear();
-    comboBox1->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(0).size(); i++){
-        if(m_ComboboxItems.at(0).at(i) == comboBox2->currentText() || m_ComboboxItems.at(0).at(i) == comboBox3->currentText() || m_ComboboxItems.at(0).at(i) == ""){
-        }else{
-            comboBox1->addItem(m_ComboboxItems.at(0).at(i));
-        }
-    }
-
-    comboBox1->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(0));
-    // 更新开关2
-
-    comboBox2->clear();
-    comboBox2->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(1).size(); i++){
-        if(m_ComboboxItems.at(1).at(i) == comboBox1->currentText() || m_ComboboxItems.at(1).at(i) == comboBox3->currentText() || m_ComboboxItems.at(1).at(i) == ""){
-        }else{
-            comboBox2->addItem(m_ComboboxItems.at(1).at(i));
-        }
-    }
-    comboBox2->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(1));
-    // 更新开关3
-    comboBox3->clear();
-    comboBox3->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(2).size(); i++){
-        if(m_ComboboxItems.at(2).at(i) == comboBox1->currentText() || m_ComboboxItems.at(2).at(i) == comboBox2->currentText() || m_ComboboxItems.at(2).at(i) == ""){
-        }else{
-            comboBox3->addItem(m_ComboboxItems.at(2).at(i));
-        }
-    }
-    comboBox3->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(2));
-
-
-
-    // 更新开关4
-
-    comboBox4->clear();
-    comboBox4->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(3).size(); i++){
-        if(m_ComboboxItems.at(3).at(i) == comboBox5->currentText() || m_ComboboxItems.at(3).at(i) == comboBox6->currentText() || m_ComboboxItems.at(0).at(i) == ""){
-        }else{
-            comboBox4->addItem(m_ComboboxItems.at(3).at(i));
-        }
-    }
-
-    comboBox4->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(3));
-    // 更新开关5
-
-    comboBox5->clear();
-    comboBox5->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(4).size(); i++){
-        if(m_ComboboxItems.at(4).at(i) == comboBox4->currentText() || m_ComboboxItems.at(4).at(i) == comboBox6->currentText() || m_ComboboxItems.at(4).at(i) == ""){
-        }else{
-            comboBox5->addItem(m_ComboboxItems.at(4).at(i));
-        }
-    }
-    comboBox5->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(4));
-    // 更新开关6
-    comboBox6->clear();
-    comboBox6->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(5).size(); i++){
-        if(m_ComboboxItems.at(5).at(i) == comboBox4->currentText() || m_ComboboxItems.at(5).at(i) == comboBox5->currentText() || m_ComboboxItems.at(5).at(i) == ""){
-        }else{
-            comboBox6->addItem(m_ComboboxItems.at(5).at(i));
-        }
-    }
-    comboBox6->setCurrentText(switchComboBoxStates[selectedComponent->getName()].at(5));
-
-    // 重新连接信号
-   connectCMB();
-
+    // 更新组合框选项，避免重复选择
+    updateComboBoxes(selectedComponent);
 }
 
-void CircuitEditor::updateCMB()
-{
 
+
+void CircuitEditor::updateWiresForComponent(CircuitComponent* component) {
+    // 首先，清除当前组件的所有连线
+    component->removeAllWires();
+
+    // 映射每个 comboBox 到对应的端点（左端或右端）
+    QMap<QComboBox*, QString> comboBoxEndMap = {
+        {comboBox1, "1端"},
+        {comboBox2, "1端"},
+        {comboBox3, "1端"},
+        {comboBox4, "2端"},
+        {comboBox5, "2端"},
+        {comboBox6, "2端"}
+    };
+
+    // 遍历每个 comboBox，创建连线
+    for (QComboBox* comboBox : comboBoxEndMap.keys()) {
+        QString targetText = comboBox->currentText();
+        if (!targetText.isEmpty()) {
+            // 解析目标组件名称和端点
+            QString targetComponentName;
+            QString targetEndType;
+            if (targetText.contains("-")) {
+                QStringList parts = targetText.split("-");
+                targetComponentName = parts[0];
+                targetEndType = parts[1];
+            } else {
+                targetComponentName = targetText;
+                targetEndType = ""; // 对于灯泡和电源，无需指定端点
+            }
+
+            // 查找目标组件
+            CircuitComponent* targetComponent = nullptr;
+            for (CircuitComponent* comp : scene->getAllComponents()) {
+                if (comp->getName() == targetComponentName) {
+                    targetComponent = comp;
+                    break;
+                }
+            }
+
+            if (targetComponent) {
+                // 创建连线，指定正确的起点和终点端点类型
+                QString componentEnd = comboBoxEndMap[comboBox]; // 当前组件的端点（1端或2端）
+                CircuitWire* wire = new CircuitWire(component, targetComponent, componentEnd, targetEndType);
+                scene->addItem(wire);
+                component->addWire(componentEnd, wire);
+            }
+        }
+    }
+
+    // 更新连线位置
+    component->updateWires();
 }
+
+
 
 
 
 
 
 void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
-    if (!component) {
-        qDebug() << "传入的组件无效！";
+    if (!component || component->getType() != "开关") {
         return;
     }
 
-    if (component->getType() != "开关") {
-        return;
-    }
-
-    // 获取当前的 comboBox 状态
+    // 获取当前开关保存的组合框状态
     QStringList savedValues = switchComboBoxStates.value(component->getName(),
-                                                         QStringList({"", "", "", "", "", ""}));
+                                                         QStringList() << "" << "" << "" << "" << "" << "");
 
-    // 清空并重新填充 comboBox，但先断开信号连接，防止触发 comboBoxChanged
+    // 断开信号连接，防止触发 comboBoxChanged
     disconnectCMB();
 
-    QStringList validOptions1, validOptions2, validOptions3, validOptions4, validOptions5, validOptions6;
-
-    validOptions1 << "";
-    validOptions2 << "";
-    validOptions3 << "";
-    validOptions4 << "";
-    validOptions5 << "";
-    validOptions6 << "";
-
+    // 获取所有元件的名称列表
+    QStringList componentNames;
     for (CircuitComponent* comp : scene->getAllComponents()) {
         if (comp->getName() != component->getName()) {
             if (comp->getType() == "开关") {
-                validOptions1 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions2 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions3 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions4 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions5 << comp->getName() + "-1端" << comp->getName() + "-2端";
-                validOptions6 << comp->getName() + "-1端" << comp->getName() + "-2端";
+                componentNames << comp->getName() + "-1端" << comp->getName() + "-2端";
             } else {
-                validOptions1 << comp->getName();
-                validOptions2 << comp->getName();
-                validOptions3 << comp->getName();
-                validOptions4 << comp->getName();
-                validOptions5 << comp->getName();
-                validOptions6 << comp->getName();
+                componentNames << comp->getName();
             }
         }
     }
 
-    m_ComboboxItems = {validOptions1, validOptions2, validOptions3, validOptions4, validOptions5, validOptions6};
-    comboBox1->clear();
-    comboBox1->addItems(validOptions1);
-    comboBox2->clear();
-    comboBox2->addItems(validOptions2);
-    comboBox3->clear();
-    comboBox3->addItems(validOptions3);
-    comboBox4->clear();
-    comboBox4->addItems(validOptions4);
-    comboBox5->clear();
-    comboBox5->addItems(validOptions5);
-    comboBox6->clear();
-    comboBox6->addItems(validOptions6);
+    // 更新每个组合框的选项并设置默认值
+    QComboBox* comboBoxes[6] = {comboBox1, comboBox2, comboBox3, comboBox4, comboBox5, comboBox6};
 
+    for (int i = 0; i < 6; ++i) {
+        comboBoxes[i]->clear();
+        comboBoxes[i]->addItem("");  // 添加空选项
 
-    // 重新设置之前选中的选项
-    comboBox1->setCurrentText(savedValues[0]);
-    comboBox2->setCurrentText(savedValues[1]);
-    comboBox3->setCurrentText(savedValues[2]);
-    comboBox4->setCurrentText(savedValues[3]);
-    comboBox5->setCurrentText(savedValues[4]);
-    comboBox6->setCurrentText(savedValues[5]);
+        QStringList options = componentNames;
 
+        // 排除同一端已选中的项（保留当前组合框的值）
+        QStringList excludes;
+        if (i < 3) {
+            // 1端
+            for (int j = 0; j < 3; ++j) {
+                if (j != i && !savedValues[j].isEmpty()) {
+                    excludes << savedValues[j];
+                }
+            }
+        } else {
+            // 2端
+            for (int j = 3; j < 6; ++j) {
+                if (j != i && !savedValues[j].isEmpty()) {
+                    excludes << savedValues[j];
+                }
+            }
+        }
 
+        for (const QString& option : options) {
+            if (!excludes.contains(option)) {
+                comboBoxes[i]->addItem(option);
+            }
+        }
 
-    // 更新开关1
-
-    comboBox1->clear();
-    comboBox1->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(0).size(); i++){
-        if(m_ComboboxItems.at(0).at(i) == comboBox2->currentText() || m_ComboboxItems.at(0).at(i) == comboBox3->currentText() || m_ComboboxItems.at(0).at(i) == ""){
-        }else{
-            comboBox1->addItem(m_ComboboxItems.at(0).at(i));
+        // 设置当前值
+        if (!savedValues[i].isEmpty() && comboBoxes[i]->findText(savedValues[i]) != -1) {
+            comboBoxes[i]->setCurrentText(savedValues[i]);
+        } else {
+            comboBoxes[i]->setCurrentIndex(0);
         }
     }
-    comboBox1->setCurrentText(savedValues[0]);
-    // 更新开关2
-
-    comboBox2->clear();
-    comboBox2->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(1).size(); i++){
-        if(m_ComboboxItems.at(1).at(i) == comboBox1->currentText() || m_ComboboxItems.at(1).at(i) == comboBox3->currentText() || m_ComboboxItems.at(1).at(i) == ""){
-        }else{
-            comboBox2->addItem(m_ComboboxItems.at(1).at(i));
-        }
-    }
-    comboBox2->setCurrentText(savedValues[1]);
-    // 更新开关3
-    comboBox3->clear();
-    comboBox3->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(2).size(); i++){
-        if(m_ComboboxItems.at(2).at(i) == comboBox1->currentText() || m_ComboboxItems.at(2).at(i) == comboBox2->currentText() || m_ComboboxItems.at(2).at(i) == ""){
-        }else{
-            comboBox3->addItem(m_ComboboxItems.at(2).at(i));
-        }
-    }
-    comboBox3->setCurrentText(savedValues[2]);
-
-
-
-    // 更新开关4
-
-    comboBox4->clear();
-    comboBox4->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(3).size(); i++){
-        if(m_ComboboxItems.at(3).at(i) == comboBox5->currentText() || m_ComboboxItems.at(3).at(i) == comboBox6->currentText() || m_ComboboxItems.at(0).at(i) == ""){
-        }else{
-            comboBox4->addItem(m_ComboboxItems.at(3).at(i));
-        }
-    }
-    comboBox4->setCurrentText(savedValues[3]);
-    // 更新开关5
-
-    comboBox5->clear();
-    comboBox5->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(4).size(); i++){
-        if(m_ComboboxItems.at(4).at(i) == comboBox4->currentText() || m_ComboboxItems.at(4).at(i) == comboBox6->currentText() || m_ComboboxItems.at(4).at(i) == ""){
-        }else{
-            comboBox5->addItem(m_ComboboxItems.at(4).at(i));
-        }
-    }
-    comboBox5->setCurrentText(savedValues[4]);
-    // 更新开关6
-    comboBox6->clear();
-    comboBox6->addItem("");
-    for(int i = 0; i < m_ComboboxItems.at(5).size(); i++){
-        if(m_ComboboxItems.at(5).at(i) == comboBox4->currentText() || m_ComboboxItems.at(5).at(i) == comboBox5->currentText() || m_ComboboxItems.at(5).at(i) == ""){
-        }else{
-            comboBox6->addItem(m_ComboboxItems.at(5).at(i));
-        }
-    }
-    comboBox6->setCurrentText(savedValues[5]);
 
     // 重新连接信号
     connectCMB();
@@ -599,16 +535,6 @@ void CircuitEditor::onRotationChanged() {
 
 
 
-
-
-void CircuitEditor::clearComboBoxes() {
-    comboBox1->clear();
-    comboBox2->clear();
-    comboBox3->clear();
-    comboBox4->clear();
-    comboBox5->clear();
-    comboBox6->clear();
-}
 
 
 

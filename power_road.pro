@@ -24,6 +24,7 @@ msvc {
 SOURCES += \
     circuitcomponent.cpp \
     circuitscene.cpp \
+    circuitwire.cpp \
     clickablegraphicsview.cpp \
     main.cpp \
     circuiteditor.cpp
@@ -32,6 +33,7 @@ HEADERS += \
     circuitcomponent.h \
     circuiteditor.h \
     circuitscene.h \
+    circuitwire.h \
     clickablegraphicsview.h
 
 # Default rules for deployment.

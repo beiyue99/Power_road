@@ -28,17 +28,16 @@ public:
     CircuitEditor(QWidget* parent = nullptr);
     void connectCMB();
     void disconnectCMB();
-    void clearComboBoxes() ;
     void setupConnections();
     void updateComboBoxes(CircuitComponent* currentSwitch) ;
+    void updateWiresForComponent(CircuitComponent* component) ;
 public slots:
     void updateComponentDetails(CircuitComponent* component);
     void onRotationChanged();
     void handleDisconnect() ;
     void handleConnect() ;
     void comboBoxChanged() ;
-    void updateCMB();
-
+    void clearComponentDetails() ;
 
 private:
     CircuitScene* scene; // 声明 scene 成员变量
@@ -62,11 +61,9 @@ private:
 
     QLabel* label1 = new QLabel;
     QLabel* label2 = new QLabel;
-
     QComboBox* comboBox1;  // 用于1端连接元件1
     QComboBox* comboBox2;  // 用于1端连接元件2
     QComboBox* comboBox3;  // 用于1端连接元件3
-
     QComboBox* comboBox4;  // 用于2端连接元件1
     QComboBox* comboBox5;  // 用于2端连接元件2
     QComboBox* comboBox6;  // 用于2端连接元件3

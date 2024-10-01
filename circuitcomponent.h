@@ -12,8 +12,11 @@
 #include <QGraphicsTextItem>
 #include <QGraphicsSceneMouseEvent>
 #include <QDebug>
+#include "circuitwire.h"
+#include <QObject>
 // 基础电路组件类的基类，是一个组
-class CircuitComponent : public QGraphicsItemGroup {
+class CircuitComponent :public QObject, public QGraphicsItemGroup {
+     Q_OBJECT
 public:
     CircuitComponent(const QString& name, const QString& type, QGraphicsItem* parent = nullptr);
 
@@ -28,14 +31,28 @@ public:
 
     // 更新开关的显示
     void updateSwitchAppearance();
+
+    void addWire(const QString&end,CircuitWire*wire);
+    void removeWire(const QString&end);
+    void updateWires();
+    QPointF getWireEndPosition(const QString& end) const; // 新增方法
+
+    void addToGroup(QGraphicsItem* item) ;
+    void removeAllWires();
+    void removeAllWires(const QString& end);
+
 protected:
     //重写绘制函数，当绘制不同形状，使用不同的画笔
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) ;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) ;
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
 private:
     QString m_name;
     QString m_type;
     bool m_isClosed = false;
-
+    QMap<QString, QList<CircuitWire*>> m_wires; // 修改为每个端点对应一个连线列表
+signals:
+    void positionChanged();  // 添加位置变化的信号
 
 };
 

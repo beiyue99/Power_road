@@ -16,9 +16,13 @@ public:
     void addComponent(CircuitComponent* component); // 添加元件到场景
     CircuitComponent* getSelectedComponent() ;  //返回当前被选择的元件组
     QList<CircuitComponent*> getAllComponents(); // 声明获取所有元件的方法
+    void updateWires() ;
 signals:
     void itemClicked(CircuitComponent* component);
     void componentDragged(CircuitComponent* component);  // 新增信号
+    void noItemClicked(); // 新增信号，用于表示没有点击任何元件
+    void componentMoved(CircuitComponent* component);
+
 protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
      void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;

@@ -33,12 +33,100 @@ void CircuitComponent::updateSwitchAppearance() {
 
 
 
+
+
+
+void CircuitComponent::removeAllWires() {
+    for (const QString& end : m_wires.keys()) {
+        removeAllWires(end);
+    }
+    m_wires.clear();
+}
+
+void CircuitComponent::removeAllWires(const QString& end) {
+    if (m_wires.contains(end)) {
+        for (CircuitWire* wire : m_wires[end]) {
+            if (wire->scene()) {
+                wire->scene()->removeItem(wire);
+            }
+            delete wire;
+        }
+        m_wires[end].clear();
+    }
+}
+
+void CircuitComponent::addWire(const QString& end, CircuitWire* wire) {
+    m_wires[end].append(wire);
+}
+
+void CircuitComponent::updateWires()
+{
+    for (const QList<CircuitWire*>& wireList : m_wires) {
+        for (CircuitWire* wire : wireList) {
+            wire->updatePosition();
+        }
+    }
+}
+
+
+
+// 重写 itemChange 事件
+QVariant CircuitComponent::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+    if (change == ItemPositionHasChanged) {
+        qDebug() << "Item position changed:" << this->getName();
+        updateWires();  // 更新连线
+        emit positionChanged();  // 发射位置变化的信号
+    }
+    return QGraphicsItemGroup::itemChange(change, value);
+}
+
+
+
+void CircuitComponent::addToGroup(QGraphicsItem* item) {
+    item->setAcceptedMouseButtons(Qt::NoButton); // 禁用子项的鼠标事件
+    QGraphicsItemGroup::addToGroup(item);
+}
+
+
+
+void CircuitComponent::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
+{
+    qDebug() << "Component moved:" << getName();
+    QGraphicsItemGroup::mouseMoveEvent(event);
+    updateWires();  // 更新连线
+    emit positionChanged();  // 发射位置变化的信号
+}
+
+
+
+
+
+QPointF CircuitComponent::getWireEndPosition(const QString& end) const
+{
+    if (m_type == "开关") {
+        if (end == "1端") {
+            return mapToScene(QPointF(-10, 5)); // 左端
+        } else if (end == "2端") {
+            return mapToScene(QPointF(70, 5)); // 右端
+        }
+    } else {
+        // 对于灯泡和电源，返回组件的中心位置
+        return mapToScene(boundingRect().center());
+    }
+}
+
+
+
+
 void CircuitComponent::setRotation(double angle) {
 
     QGraphicsItemGroup::setRotation(angle);
     // 确保更新视觉效果
     update();
 }
+
+
 
 
 CircuitComponent::CircuitComponent(const QString& name, const QString& type, QGraphicsItem* parent)
@@ -125,10 +213,12 @@ CircuitComponent* createSwitch(int number) {
 
 CircuitComponent* createLamp(char label) {
     // 创建一个 CircuitComponent，表示灯泡
-    CircuitComponent* lampComponent = new CircuitComponent(QString("灯泡%1").arg(label), "Lamp");
+    CircuitComponent* lampComponent = new CircuitComponent(QString("灯泡%1").arg(label), "灯泡");
 
     // 创建灯泡的空心部分
     QGraphicsEllipseItem* lampBody = new QGraphicsEllipseItem(0, 0, 50, 50);
+    lampBody->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
+    lampComponent->addToGroup(lampBody);
 
     // 定义灯泡中心和外圆半径
     const qreal centerX = 25;
@@ -148,16 +238,16 @@ CircuitComponent* createLamp(char label) {
         qreal endY = startY + lineLength * qSin(angle);
         // 创建线条并添加到组件中
         QGraphicsLineItem* line = new QGraphicsLineItem(startX, startY, endX, endY);
+        line->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
         lampComponent->addToGroup(line);
     }
 
     // 创建文本标签
     QGraphicsTextItem* lampLabel = new QGraphicsTextItem(QString(label));
     lampLabel->setPos(20, 20); // 设置标签位置
-
-    // 将灯泡主体和标签添加到组件中
-    lampComponent->addToGroup(lampBody);
+    lampLabel->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     lampComponent->addToGroup(lampLabel);
+
     return lampComponent;
 }
 
@@ -170,26 +260,34 @@ CircuitComponent* createLamp(char label) {
 
 // 自定义电源图形，添加编号
 CircuitComponent* createPower(int number) {
-//    CircuitComponent* group = new CircuitComponent;
-    CircuitComponent* group = new CircuitComponent(QString("电源") + QString::number(number), "电源");
+    CircuitComponent* group = new CircuitComponent(QString("电源%1").arg(number), "电源");
+
     // 外部圆圈
     QGraphicsEllipseItem* powerCircle = new QGraphicsEllipseItem(0, 0, 40, 40);
+    powerCircle->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     group->addToGroup(powerCircle);
+
     // 中间的“S”形实线
     QPainterPath sShape;
     sShape.moveTo(10, 30);
     sShape.cubicTo(10, 0, 30, 40, 30, 10);
     QGraphicsPathItem* sItem = new QGraphicsPathItem(sShape);
+    sItem->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     group->addToGroup(sItem);
 
     // 在电源图形左侧添加矩形框和编号
-    QGraphicsRectItem* rect = new QGraphicsRectItem(-50, 10, 50, 25);  // 矩形框的位置调整到左侧
+    QGraphicsRectItem* rect = new QGraphicsRectItem(-50, 10, 50, 25);
+    rect->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     group->addToGroup(rect);
-    QGraphicsTextItem* numberItem = new QGraphicsTextItem(QString("电源") + QString::number(number));
-    numberItem->setPos(-45, 10);  // 调整编号的位置到左侧
+
+    QGraphicsTextItem* numberItem = new QGraphicsTextItem(QString("电源%1").arg(number));
+    numberItem->setPos(-45, 10);
+    numberItem->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     group->addToGroup(numberItem);
+
     return group;
 }
+
 
 CircuitComponent* createLampWithoutLabel() {
     CircuitComponent* lamp = new CircuitComponent("无标识灯泡", "灯泡");
@@ -198,26 +296,26 @@ CircuitComponent* createLampWithoutLabel() {
     QGraphicsEllipseItem* bulbOuterCircle = new QGraphicsEllipseItem(0, 0, 40, 40);
     bulbOuterCircle->setPen(QPen(Qt::black, 2));
     bulbOuterCircle->setBrush(Qt::NoBrush);
-    // 允许灯泡被点击和选中
-    bulbOuterCircle->setFlag(QGraphicsItem::ItemIsSelectable, true);
-    bulbOuterCircle->setFlag(QGraphicsItem::ItemIsMovable, false);
+    bulbOuterCircle->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     lamp->addToGroup(bulbOuterCircle);
-    // 绘制从圆周向外延伸的六条实线
-        QPen pen(Qt::black, 2);  // 黑色实线，线宽为2
-        for (int i = 0; i < 6; ++i) {
-            qreal angle = i * 60;  // 每条线相隔60度
-            qreal x1 = 20 + 20 * qCos(qDegreesToRadians(angle));  // 起点在圆周上
-            qreal y1 = 20 + 20 * qSin(qDegreesToRadians(angle));
-            qreal x2 = 20 + 30 * qCos(qDegreesToRadians(angle));  // 终点在圆外
-            qreal y2 = 20 + 30 * qSin(qDegreesToRadians(angle));
-            QGraphicsLineItem* lineItem = new QGraphicsLineItem(x1, y1, x2, y2, bulbOuterCircle);
-            lineItem->setPen(pen);  // 设置线的颜色和宽度
-            lamp->addToGroup(lineItem);
-        }
 
-        lamp->setFlag(QGraphicsItem::ItemIsSelectable, true); // 确保整个组件可被选中
+    // 绘制从圆周向外延伸的六条实线
+    QPen pen(Qt::black, 2);  // 黑色实线，线宽为2
+    for (int i = 0; i < 6; ++i) {
+        qreal angle = i * 60;  // 每条线相隔60度
+        qreal x1 = 20 + 20 * qCos(qDegreesToRadians(angle));  // 起点在圆周上
+        qreal y1 = 20 + 20 * qSin(qDegreesToRadians(angle));
+        qreal x2 = 20 + 30 * qCos(qDegreesToRadians(angle));  // 终点在圆外
+        qreal y2 = 20 + 30 * qSin(qDegreesToRadians(angle));
+        QGraphicsLineItem* lineItem = new QGraphicsLineItem(x1, y1, x2, y2);
+        lineItem->setPen(pen);  // 设置线的颜色和宽度
+        lineItem->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
+        lamp->addToGroup(lineItem);
+    }
+
     return lamp;
 }
+
 
 
 
