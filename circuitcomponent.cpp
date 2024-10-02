@@ -2,10 +2,36 @@
 
 
 
+// 构造函数
+CircuitComponent::CircuitComponent(const QString& name, const QString& type, QGraphicsItem* parent)
+    : QObject(), QGraphicsItemGroup(parent), m_name(name), m_type(type) {
+    setFlag(QGraphicsItem::ItemIsMovable);
+    setFlag(QGraphicsItem::ItemIsSelectable);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges); // 确保位置变化时发送通知
+    setHandlesChildEvents(false);
+}
+
+
+
+qreal CircuitComponent::getRadius() const {
+    if (m_type == "灯泡") {
+        return 15.0; // 返回灯泡的半径
+    }
+    // 其他类型的处理...
+    return 0.0;
+}
+
+void CircuitComponent::setRotation(double angle) {
+    QGraphicsItemGroup::setRotation(angle);
+    // 确保更新视觉效果
+    update();
+}
+
 void CircuitComponent::setClosed(bool closed) {
     m_isClosed = closed;  // 更新内部的闭合状态
     updateSwitchAppearance();  // 更新开关外观
 }
+
 
 
 void CircuitComponent::updateSwitchAppearance() {
@@ -14,12 +40,16 @@ void CircuitComponent::updateSwitchAppearance() {
     // 查找中间的翘起线
     for (QGraphicsItem* item : childItems()) {
         if (QGraphicsLineItem* line = dynamic_cast<QGraphicsLineItem*>(item)) {
-            middleLine = line;
+            // 根据线的位置判断是否为中间的翘起线
+            // 这里假设中间的线位于固定的位置，您可能需要根据实际情况调整
+            if (line->line().p1() == QPointF(5, 5) || line->line().p1() == QPointF(-5, 5)) {
+                middleLine = line;
+                break;
+            }
         }
     }
 
     if (middleLine) {
-
         if (m_isClosed) {
             // 水平状态下的闭合
             middleLine->setLine(QLineF(5, 5, 55, 5));  // 水平方向闭合
@@ -31,19 +61,11 @@ void CircuitComponent::updateSwitchAppearance() {
     update();  // 更新显示
 }
 
-
-
-
-
-
-void CircuitComponent::removeAllWires() {
-    for (const QString& end : m_wires.keys()) {
-        removeAllWires(end);
-    }
-    m_wires.clear();
+void CircuitComponent::addWire(const QString& end, CircuitWire* wire) {
+    m_wires[end].append(wire);
 }
 
-void CircuitComponent::removeAllWires(const QString& end) {
+void CircuitComponent::removeWire(const QString& end) {
     if (m_wires.contains(end)) {
         for (CircuitWire* wire : m_wires[end]) {
             if (wire->scene()) {
@@ -55,12 +77,14 @@ void CircuitComponent::removeAllWires(const QString& end) {
     }
 }
 
-void CircuitComponent::addWire(const QString& end, CircuitWire* wire) {
-    m_wires[end].append(wire);
+void CircuitComponent::removeAllWires() {
+    for (const QString& end : m_wires.keys()) {
+        removeWire(end);
+    }
+    m_wires.clear();
 }
 
-void CircuitComponent::updateWires()
-{
+void CircuitComponent::updateWires() {
     for (const QList<CircuitWire*>& wireList : m_wires) {
         for (CircuitWire* wire : wireList) {
             wire->updatePosition();
@@ -68,104 +92,68 @@ void CircuitComponent::updateWires()
     }
 }
 
-
-
-// 重写 itemChange 事件
-QVariant CircuitComponent::itemChange(GraphicsItemChange change, const QVariant &value)
-{
-    if (change == ItemPositionHasChanged) {
-
-        updateWires();  // 更新连线
-        emit positionChanged();  // 发射位置变化的信号
-    }
-    return QGraphicsItemGroup::itemChange(change, value);
-}
-
-
-
-void CircuitComponent::addToGroup(QGraphicsItem* item) {
-    item->setAcceptedMouseButtons(Qt::NoButton); // 禁用子项的鼠标事件
-    QGraphicsItemGroup::addToGroup(item);
-}
-
-
-
-void CircuitComponent::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
-{
-
-    QGraphicsItemGroup::mouseMoveEvent(event);
-    updateWires();  // 更新连线
-    emit positionChanged();  // 发射位置变化的信号
-}
-
-
-
-
-
-QPointF CircuitComponent::getWireEndPosition(const QString& end) const
-{
+QPointF CircuitComponent::getWireEndPosition(const QString& end) const {
     if (m_type == "开关") {
         if (end == "1端") {
             return mapToScene(QPointF(-10, 5)); // 左端
         } else if (end == "2端") {
             return mapToScene(QPointF(70, 5)); // 右端
         }
+    } else if (m_type == "灯泡") {
+        // 返回灯泡的中心位置
+        return mapToScene(QPointF(0, 0));
+    } else if (m_type == "电源") {
+        // 返回电源的中心位置
+        return mapToScene(QPointF(20, 20));
     } else {
-        // 对于灯泡和电源，返回组件的中心位置
+        // 默认返回中心位置
         return mapToScene(boundingRect().center());
     }
 }
 
-
-
-
-void CircuitComponent::setRotation(double angle) {
-
-    QGraphicsItemGroup::setRotation(angle);
-    // 确保更新视觉效果
-    update();
+void CircuitComponent::addToGroup(QGraphicsItem* item) {
+    item->setAcceptedMouseButtons(Qt::NoButton); // 禁用子项的鼠标事件
+    QGraphicsItemGroup::addToGroup(item);
 }
 
-
-
-
-CircuitComponent::CircuitComponent(const QString& name, const QString& type, QGraphicsItem* parent)
-    : QGraphicsItemGroup(parent), m_name(name), m_type(type) {
-    setFlag(QGraphicsItem::ItemIsMovable);
-    setFlag(QGraphicsItem::ItemIsSelectable);
-    setFlag(QGraphicsItem::ItemSendsGeometryChanges); // 这个标志确保位置变化时发送通知
-    setHandlesChildEvents(false);
+void CircuitComponent::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+    QGraphicsItemGroup::mouseMoveEvent(event);
+    updateWires();  // 更新连线
+    emit positionChanged();  // 发射位置变化的信号
 }
 
+QVariant CircuitComponent::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+    if (change == ItemSelectedHasChanged) {
+        bool selected = value.toBool();
+        QPen pen = selected ? QPen(Qt::red, 2) : QPen(Qt::black, 2);
+        QColor textColor = selected ? Qt::red : Qt::black;
 
+        for (QGraphicsItem* item : childItems()) {
+            if (QGraphicsEllipseItem* ellipse = dynamic_cast<QGraphicsEllipseItem*>(item)) {
+                ellipse->setPen(pen);
+            } else if (QGraphicsLineItem* line = dynamic_cast<QGraphicsLineItem*>(item)) {
+                line->setPen(pen);
+            } else if (QGraphicsPathItem* path = dynamic_cast<QGraphicsPathItem*>(item)) {
+                path->setPen(pen);
+            } else if (QGraphicsTextItem* text = dynamic_cast<QGraphicsTextItem*>(item)) {
+                text->setDefaultTextColor(textColor);
+            }
+        }
+    }
 
+    if (change == ItemPositionHasChanged) {
+        updateWires();  // 更新连线
+        emit positionChanged();  // 发射位置变化的信号
+    }
+
+    return QGraphicsItemGroup::itemChange(change, value);
+}
 
 void CircuitComponent::paint(QPainter* painter,
                              const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    // 选中时将元件设置为红色
-    QPen pen;
-    if (isSelected()) {
-        pen = QPen(Qt::red, 2);              // 设置线条颜色为红色
-    } else {
-        pen = QPen(Qt::black, 2);                    // 默认线条颜色为黑色
-    }
-
-    // 绘制子项
-    for (QGraphicsItem* item : childItems()) {
-          painter->setPen(pen);
-          if (QGraphicsEllipseItem* ellipse = dynamic_cast<QGraphicsEllipseItem*>(item)) {
-              // 绘制椭圆
-              painter->drawEllipse(ellipse->rect());
-          } else if (QGraphicsLineItem* line = dynamic_cast<QGraphicsLineItem*>(item)) {
-              // 绘制线条
-              painter->drawLine(line->line());
-          } else if (QGraphicsPathItem* path = dynamic_cast<QGraphicsPathItem*>(item)) {
-              // 绘制“S”形路径
-              painter->drawPath(path->path());
-          }
-      }
+    // 不需要自定义绘制，子项会自动绘制
 }
-
 
 
 
@@ -210,50 +198,46 @@ CircuitComponent* createSwitch(int number) {
 
 
 
-
-
-
 CircuitComponent* createLamp(char label) {
     // 创建一个 CircuitComponent，表示灯泡
     CircuitComponent* lampComponent = new CircuitComponent(QString("灯泡%1").arg(label), "灯泡");
 
-    // 创建灯泡的空心部分
-    QGraphicsEllipseItem* lampBody = new QGraphicsEllipseItem(0, 0, 50, 50);
+    // 创建灯泡的空心部分，中心在 (0, 0)
+    QGraphicsEllipseItem* lampBody = new QGraphicsEllipseItem(-15, -15, 30, 30); // (-15, -15, 30, 30)
+    lampBody->setPen(QPen(Qt::black, 2));
+    lampBody->setBrush(Qt::NoBrush);
     lampBody->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     lampComponent->addToGroup(lampBody);
 
     // 定义灯泡中心和外圆半径
-    const qreal centerX = 25;
-    const qreal centerY = 25;
-    const qreal radius = 25;
-    const qreal lineLength = 20; // 每根线的长度
+    const qreal radius = 15.0; // 半径 15
+    const qreal lineLength = 10.0; // 每根线的长度
 
     // 创建六根线，分别按60度间隔排列
     for (int i = 0; i < 6; ++i) {
         // 计算每根线的角度 (60度间隔)
         qreal angle = qDegreesToRadians(60.0 * i);
         // 计算每根线的起点（灯泡外圆上的点）
-        qreal startX = centerX + radius * qCos(angle);
-        qreal startY = centerY + radius * qSin(angle);
+        qreal startX = radius * qCos(angle);
+        qreal startY = radius * qSin(angle);
         // 计算每根线的终点（起点再延伸lineLength）
         qreal endX = startX + lineLength * qCos(angle);
         qreal endY = startY + lineLength * qSin(angle);
         // 创建线条并添加到组件中
         QGraphicsLineItem* line = new QGraphicsLineItem(startX, startY, endX, endY);
+        line->setPen(QPen(Qt::black, 2));
         line->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
         lampComponent->addToGroup(line);
     }
 
     // 创建文本标签
     QGraphicsTextItem* lampLabel = new QGraphicsTextItem(QString(label));
-    lampLabel->setPos(20, 20); // 设置标签位置
+    lampLabel->setPos(-5, -10); // 根据需要调整位置
     lampLabel->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     lampComponent->addToGroup(lampLabel);
 
     return lampComponent;
 }
-
-
 
 
 
