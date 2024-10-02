@@ -15,11 +15,15 @@ CircuitComponent::CircuitComponent(const QString& name, const QString& type, QGr
 
 qreal CircuitComponent::getRadius() const {
     if (m_type == "灯泡") {
-        return 15.0; // 返回灯泡的半径
+        return 15.0; // 灯泡半径
     }
-    // 其他类型的处理...
-    return 0.0;
+    else if (m_type == "电源") {
+        return 20.0; // 电源半径（根据实际绘制的圆圈大小调整）
+    }
+    // 如果有其他圆形组件，可以在此处添加相应的半径
+    return 0.0; // 默认非圆形组件
 }
+
 
 void CircuitComponent::setRotation(double angle) {
     QGraphicsItemGroup::setRotation(angle);
@@ -244,35 +248,42 @@ CircuitComponent* createLamp(char label) {
 
 
 
+
 // 自定义电源图形，添加编号
 CircuitComponent* createPower(int number) {
     CircuitComponent* group = new CircuitComponent(QString("电源%1").arg(number), "电源");
 
-    // 外部圆圈
-    QGraphicsEllipseItem* powerCircle = new QGraphicsEllipseItem(0, 0, 40, 40);
+    // 将圆圈中心放在 (0,0)
+    QGraphicsEllipseItem* powerCircle = new QGraphicsEllipseItem(-20, -20, 40, 40); // (-20, -20, 40, 40)
+    powerCircle->setPen(QPen(Qt::black, 2));
+    powerCircle->setBrush(Qt::NoBrush);
     powerCircle->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     group->addToGroup(powerCircle);
 
     // 中间的“S”形实线
     QPainterPath sShape;
-    sShape.moveTo(10, 30);
-    sShape.cubicTo(10, 0, 30, 40, 30, 10);
+    sShape.moveTo(-10, 10);
+    sShape.cubicTo(-10, -20, 10, 20, 10, -10);
     QGraphicsPathItem* sItem = new QGraphicsPathItem(sShape);
+    sItem->setPen(QPen(Qt::black, 2));
     sItem->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     group->addToGroup(sItem);
 
     // 在电源图形左侧添加矩形框和编号
-    QGraphicsRectItem* rect = new QGraphicsRectItem(-50, 10, 50, 25);
+    QGraphicsRectItem* rect = new QGraphicsRectItem(-70, -12.5, 50, 25); // 调整位置以适应中心
+    rect->setPen(QPen(Qt::black, 2));
+    rect->setBrush(Qt::NoBrush);
     rect->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     group->addToGroup(rect);
 
     QGraphicsTextItem* numberItem = new QGraphicsTextItem(QString("电源%1").arg(number));
-    numberItem->setPos(-45, 10);
+    numberItem->setPos(-65, -10); // 根据需要调整位置
     numberItem->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     group->addToGroup(numberItem);
 
     return group;
 }
+
 
 
 CircuitComponent* createLampWithoutLabel() {

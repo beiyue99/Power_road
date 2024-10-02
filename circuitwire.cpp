@@ -35,14 +35,11 @@ void CircuitWire::updatePosition() {
         } else {
             endPos = m_endItem->scenePos();
         }
-
-        // 如果起点是灯泡，调整起点到圆周上
-        if (startComponent && startComponent->getType() == "灯泡") {
+        if (startComponent && startComponent->getRadius() > 0.0) {
             startPos = calculateCircleIntersection(startComponent, endPos);
         }
 
-        // 如果终点是灯泡，调整终点到圆周上
-        if (endComponent && endComponent->getType() == "灯泡") {
+        if (endComponent && endComponent->getRadius() > 0.0) {
             endPos = calculateCircleIntersection(endComponent, startPos);
         }
 
@@ -59,12 +56,12 @@ void CircuitWire::updatePosition() {
     }
 }
 
-QPointF CircuitWire::calculateCircleIntersection(CircuitComponent* lampComponent, const QPointF& otherPos) const {
-    // 获取灯泡的中心和半径
-    QPointF center = lampComponent->mapToScene(QPointF(0, 0));
-    qreal radius = lampComponent->getRadius(); // 获取正确的半径
+QPointF CircuitWire::calculateCircleIntersection(CircuitComponent* component, const QPointF& otherPos) const {
+    // 获取组件的中心和半径
+    QPointF center = component->mapToScene(QPointF(0, 0));
+    qreal radius = component->getRadius();
 
-    // 计算从灯泡中心指向另一点的向量
+    // 计算从中心指向另一点的向量
     QPointF direction = otherPos - center;
     qreal length = std::hypot(direction.x(), direction.y());
 
@@ -79,9 +76,9 @@ QPointF CircuitWire::calculateCircleIntersection(CircuitComponent* lampComponent
     // 计算圆周上的交点
     QPointF intersectionPoint = center + direction * radius;
 
-    // 调试输出
+    // 调试输出（可选）
     qDebug() << "calculateCircleIntersection:";
-    qDebug() << "Lamp Center:" << center;
+    qDebug() << "Component Center:" << center;
     qDebug() << "Other Pos:" << otherPos;
     qDebug() << "Direction:" << direction;
     qDebug() << "Intersection Point:" << intersectionPoint;
