@@ -16,11 +16,14 @@ public:
     void updatePosition();
     QString getStartEndType() const { return m_startEndType; }
     QString getEndEndType() const { return m_endEndType; }
+public:
+    QGraphicsItem* getStartItem() const { return m_startItem; }
+    QGraphicsItem* getEndItem() const { return m_endItem; }
 
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override;
 
-private:
+public:
     QPointF calculateCircleIntersection(CircuitComponent* lampComponent, const QPointF& otherPos) const;
 
     QGraphicsItem* m_startItem;

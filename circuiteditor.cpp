@@ -59,7 +59,7 @@ CircuitEditor::CircuitEditor(QWidget *parent)
     QGraphicsView* view = new QGraphicsView(this);
     scene = new CircuitScene(this);
     view->setScene(scene);
-    view->setMinimumWidth(800); // 设置最小宽度为400像素
+    view->setMinimumWidth(800); // 设置最小宽度为800像素
 
     // 右侧布局：元件详细信息
     QWidget* rightWidget = new QWidget(this);
@@ -169,17 +169,11 @@ CircuitEditor::CircuitEditor(QWidget *parent)
 
     // 将布局加入主布局中
     mainLayout->addWidget(leftWidget, 0); // 左侧电路元件按钮布局
-    mainLayout->addWidget(view, 5);       // 中间电路编辑区，设置权重为 3
+    mainLayout->addWidget(view, 5);       // 中间电路编辑区，设置权重为 5
     mainLayout->addWidget(rightWidget, 0); // 右侧元件详细信息布局
 
-
-
-
     setupConnections();
-
 }
-
-
 
 void CircuitEditor::setupConnections() {
 
@@ -246,7 +240,6 @@ void CircuitEditor::setupConnections() {
 
 }
 
-
 void CircuitEditor::clearComponentDetails() {
     // 清空右侧显示
     nameLabel->setText("元件名称");
@@ -267,9 +260,6 @@ void CircuitEditor::clearComponentDetails() {
     comboBox5->setVisible(false);
     comboBox6->setVisible(false);
 }
-
-
-
 
 void CircuitEditor::comboBoxChanged() {
     CircuitComponent* selectedComponent = scene->getSelectedComponent();
@@ -292,15 +282,17 @@ void CircuitEditor::comboBoxChanged() {
 
     // 更新组合框选项，避免重复选择
     updateComboBoxes(selectedComponent);
-}
 
+    // 调用回路检测
+    scene->detectAndHighlightCycles();
+}
 
 
 void CircuitEditor::updateWiresForComponent(CircuitComponent* component) {
     // 首先，清除当前组件的所有连线
     component->removeAllWires();
 
-    // 映射每个 comboBox 到对应的端点（左端或右端）
+    // 映射每个 comboBox 到对应的端点（1端或2端）
     QMap<QComboBox*, QString> comboBoxEndMap = {
         {comboBox1, "1端"},
         {comboBox2, "1端"},
@@ -341,19 +333,15 @@ void CircuitEditor::updateWiresForComponent(CircuitComponent* component) {
                 CircuitWire* wire = new CircuitWire(component, targetComponent, componentEnd, targetEndType);
                 scene->addItem(wire);
                 component->addWire(componentEnd, wire);
+
             }
         }
     }
 
     // 更新连线位置
     component->updateWires();
+    // CircuitScene::updateCircuitStatus 会被自动调用 via CircuitScene::updateWires
 }
-
-
-
-
-
-
 
 void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
     if (!component || component->getType() != "开关") {
@@ -424,15 +412,6 @@ void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
     connectCMB();
 }
 
-
-
-
-
-
-
-
-
-
 void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
 
     if (!component) {
@@ -491,28 +470,19 @@ void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
 void CircuitEditor::handleDisconnect() {
     CircuitComponent* selectedComponent = scene->getSelectedComponent();
     if (selectedComponent && selectedComponent->getType() == "开关") {
         selectedComponent->setClosed(false);  // 设置为断开状态
+        scene->detectAndHighlightCycles();    // 调用回路检测
     }
 }
 
 void CircuitEditor::handleConnect() {
     CircuitComponent* selectedComponent = scene->getSelectedComponent();
     if (selectedComponent && selectedComponent->getType() == "开关") {
-        selectedComponent->setClosed(true);  // 设置为闭合状态
+        selectedComponent->setClosed(true);   // 设置为闭合状态
+        scene->detectAndHighlightCycles();    // 调用回路检测
     }
 }
 
@@ -530,13 +500,6 @@ void CircuitEditor::onRotationChanged() {
         }
     }
 }
-
-
-
-
-
-
-
 
 void CircuitEditor::connectCMB()
 {
@@ -569,7 +532,3 @@ void CircuitEditor::disconnectCMB()
     disconnect(comboBox6, QOverload<int>::of(&QComboBox::currentIndexChanged),
                this, &CircuitEditor::comboBoxChanged);
 }
-
-
-
-

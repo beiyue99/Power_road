@@ -49,18 +49,20 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event);
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
 
-private:
+public:
     QString m_name;
     QString m_type;
     bool m_isClosed = false;
     QMap<QString, QList<CircuitWire*>> m_wires; // 修改为每个端点对应一个连线列表
+public:
+    const QMap<QString, QList<CircuitWire*>>& getWires() const { return m_wires; }
 
 public:
     qreal getRadius() const; // 新增方法，获取组件的半径
 
 signals:
     void positionChanged();  // 添加位置变化的信号
-
+    void switchStateChanged(); // 添加开关状态变化的信号
 };
 
 // 声明创建组件的函数

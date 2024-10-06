@@ -34,6 +34,7 @@ void CircuitComponent::setRotation(double angle) {
 void CircuitComponent::setClosed(bool closed) {
     m_isClosed = closed;  // 更新内部的闭合状态
     updateSwitchAppearance();  // 更新开关外观
+    emit switchStateChanged(); // 发出开关状态变化信号
 }
 
 
@@ -107,13 +108,18 @@ QPointF CircuitComponent::getWireEndPosition(const QString& end) const {
         // 返回灯泡的中心位置
         return mapToScene(QPointF(0, 0));
     } else if (m_type == "电源") {
-        // 返回电源的中心位置
-        return mapToScene(QPointF(20, 20));
+        if (end == "正端") {
+            return mapToScene(QPointF(20, 0)); // 正端
+        } else if (end == "负端") {
+            return mapToScene(QPointF(-20, 0)); // 负端
+        }
     } else {
         // 默认返回中心位置
         return mapToScene(boundingRect().center());
     }
 }
+
+
 
 void CircuitComponent::addToGroup(QGraphicsItem* item) {
     item->setAcceptedMouseButtons(Qt::NoButton); // 禁用子项的鼠标事件
@@ -249,6 +255,8 @@ CircuitComponent* createLamp(char label) {
 
 
 
+
+
 // 自定义电源图形，添加编号
 CircuitComponent* createPower(int number) {
     CircuitComponent* group = new CircuitComponent(QString("电源%1").arg(number), "电源");
@@ -283,6 +291,7 @@ CircuitComponent* createPower(int number) {
 
     return group;
 }
+
 
 
 

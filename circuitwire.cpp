@@ -35,10 +35,13 @@ void CircuitWire::updatePosition() {
         } else {
             endPos = m_endItem->scenePos();
         }
+
+        // 如果起点有半径，调整起点到圆周上
         if (startComponent && startComponent->getRadius() > 0.0) {
             startPos = calculateCircleIntersection(startComponent, endPos);
         }
 
+        // 如果终点有半径，调整终点到圆周上
         if (endComponent && endComponent->getRadius() > 0.0) {
             endPos = calculateCircleIntersection(endComponent, startPos);
         }
@@ -55,18 +58,17 @@ void CircuitWire::updatePosition() {
                  << "End Pos:" << endPos;
     }
 }
-
 QPointF CircuitWire::calculateCircleIntersection(CircuitComponent* component, const QPointF& otherPos) const {
-    // 获取组件的中心和半径
-    QPointF center = component->mapToScene(QPointF(0, 0));
+    // 获取组件的圆心和半径
+    QPointF center = component->mapToScene(component->boundingRect().center());
     qreal radius = component->getRadius();
 
-    // 计算从中心指向另一点的向量
+    // 计算从圆心指向另一点的向量
     QPointF direction = otherPos - center;
     qreal length = std::hypot(direction.x(), direction.y());
 
     if (length == 0) {
-        // 避免除以零，返回中心点
+        // 避免除以零，返回圆心
         return center;
     }
 
@@ -76,19 +78,14 @@ QPointF CircuitWire::calculateCircleIntersection(CircuitComponent* component, co
     // 计算圆周上的交点
     QPointF intersectionPoint = center + direction * radius;
 
-    // 调试输出（可选）
-    qDebug() << "calculateCircleIntersection:";
-    qDebug() << "Component Center:" << center;
-    qDebug() << "Other Pos:" << otherPos;
-    qDebug() << "Direction:" << direction;
-    qDebug() << "Intersection Point:" << intersectionPoint;
 
     return intersectionPoint;
 }
 
+
 void CircuitWire::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    QPen pen(Qt::black, 2);
-    painter->setPen(pen);
+    QPen currentPen = pen(); // 使用当前设置的画笔
+    painter->setPen(currentPen);
 
     QPointF startPoint = line().p1();
     QPointF endPoint = line().p2();

@@ -17,6 +17,10 @@ public:
     CircuitComponent* getSelectedComponent() ;  //返回当前被选择的元件组
     QList<CircuitComponent*> getAllComponents(); // 声明获取所有元件的方法
     void updateWires() ;
+    void updateCircuitStatus(); // 新增方法
+public:
+    void detectAndHighlightCycles();
+
 signals:
     void itemClicked(CircuitComponent* component);
     void componentDragged(CircuitComponent* component);  // 新增信号
