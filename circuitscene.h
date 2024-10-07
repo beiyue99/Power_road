@@ -29,7 +29,7 @@ signals:
     void componentDragged(CircuitComponent* component);  // 新增信号
     void noItemClicked(); // 新增信号，用于表示没有点击任何元件
     void componentMoved(CircuitComponent* component);
-
+    void recheck(CircuitComponent* comp);
 protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;

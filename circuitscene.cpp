@@ -70,6 +70,12 @@ void CircuitScene::removeComponentAndWires(CircuitComponent* component) {
     delete component;
 
      updatePowerStatus();
+     for (CircuitComponent* comp : this->getAllComponents()) {
+         if (comp->getType() == "开关") {
+
+             emit recheck(comp);
+         }
+     }
 }
 
 

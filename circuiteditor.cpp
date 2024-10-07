@@ -242,9 +242,8 @@ void CircuitEditor::setupConnections() {
     connect(disconnectButton, &QPushButton::clicked, this, &CircuitEditor::handleDisconnect);
     connect(connectButton, &QPushButton::clicked, this, &CircuitEditor::handleConnect);
     connect(deleteButton, &QPushButton::clicked, this, &CircuitEditor::handleDeleteComponent);
-
+    connect(scene,&CircuitScene::recheck,this,&CircuitEditor::updateWiresForComponent);
 }
-
 void CircuitEditor::handleDeleteComponent() {
     // 获取选中的元件
     CircuitComponent* selectedComponent = scene->getSelectedComponent();
@@ -364,6 +363,7 @@ void CircuitEditor::updateWiresForComponent(CircuitComponent* component) {
     // 更新连线位置
     component->updateWires();
     // CircuitScene::updateCircuitStatus 会被自动调用 via CircuitScene::updateWires
+    scene->updatePowerStatus();
 }
 
 void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
