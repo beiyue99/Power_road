@@ -1,3 +1,5 @@
+// circuitscene.h
+
 #ifndef CIRCUITSCENE_H
 #define CIRCUITSCENE_H
 
@@ -8,18 +10,19 @@
 #include "circuitcomponent.h"
 #include "circuiteditor.h"
 #include <QtDebug>
+#include <QQueue>
 class CircuitScene : public QGraphicsScene {
     Q_OBJECT
 
 public:
     explicit CircuitScene(QObject* parent = nullptr);
     void addComponent(CircuitComponent* component); // 添加元件到场景
-    CircuitComponent* getSelectedComponent() ;  //返回当前被选择的元件组
+    CircuitComponent* getSelectedComponent();  //返回当前被选择的元件组
     QList<CircuitComponent*> getAllComponents(); // 声明获取所有元件的方法
-    void updateWires() ;
-    void updateCircuitStatus(); // 新增方法
-public:
-    void detectAndHighlightCycles();
+    void updateWires();
+    void updateCircuitStatus(); // 保留以防需要
+
+    void updatePowerStatus(); // 新增方法
 
 signals:
     void itemClicked(CircuitComponent* component);
@@ -29,12 +32,13 @@ signals:
 
 protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
-     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
-     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
 private:
-     QList<CircuitComponent*> components; // 存储场景中所有元件的容器
-      CircuitComponent* draggedComponent = nullptr;  // 当前拖拽的元件
-      bool isDragging = false; // 新增标志，追踪是否正在拖拽
+    QList<CircuitComponent*> components; // 存储场景中所有元件的容器
+    CircuitComponent* draggedComponent = nullptr;  // 当前拖拽的元件
+    bool isDragging = false; // 新增标志，追踪是否正在拖拽
 };
 
 #endif // CIRCUITSCENE_H

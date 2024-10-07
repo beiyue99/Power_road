@@ -21,12 +21,15 @@ void CircuitScene::addComponent(CircuitComponent* component) {
     connect(component, &CircuitComponent::positionChanged, this, [this, component]() {
         emit componentMoved(component);
         updateWires();  // 每当组件移动时，更新所有连线
-        detectAndHighlightCycles(); // 调用回路检测
+        updatePowerStatus(); // 调用供电状态更新
     });
 
-    detectAndHighlightCycles(); // 添加组件后调用
-}
+    connect(component, &CircuitComponent::switchStateChanged, this, [this, component]() {
+        updatePowerStatus(); // 开关状态变化时更新供电状态
+    });
 
+    updatePowerStatus(); // 添加组件后调用
+}
 
 
 CircuitComponent* CircuitScene::getSelectedComponent() {
@@ -217,14 +220,13 @@ void CircuitScene::updateCircuitStatus() {
     }
 }
 
-void CircuitScene::detectAndHighlightCycles() {
-    // 清除之前的高亮设置
-    qDebug() << "Clearing previous highlights.";
+void CircuitScene::updatePowerStatus() {
+    // Step 1: 清除之前的供电状态
     for (CircuitComponent* component : components) {
         if (component->getType() == "灯泡") {
             for (QGraphicsItem* item : component->childItems()) {
                 if (QGraphicsEllipseItem* ellipse = dynamic_cast<QGraphicsEllipseItem*>(item)) {
-                    ellipse->setBrush(QBrush(Qt::NoBrush));
+                    ellipse->setBrush(Qt::NoBrush); // 重置为无填充
                 }
             }
         }
@@ -237,15 +239,13 @@ void CircuitScene::detectAndHighlightCycles() {
         }
     }
 
-    // 构建图的邻接表
+    // Step 2: 构建邻接表，考虑闭合的开关
     QMap<CircuitComponent*, QList<CircuitComponent*>> adjacencyMap;
 
-    // 初始化邻接表
     for (CircuitComponent* component : components) {
         adjacencyMap[component] = QList<CircuitComponent*>();
     }
 
-    // 遍历所有连线，填充邻接表
     QList<CircuitWire*> allWires;
     for (CircuitComponent* component : components) {
         for (auto it = component->getWires().begin(); it != component->getWires().end(); ++it) {
@@ -257,7 +257,6 @@ void CircuitScene::detectAndHighlightCycles() {
 
     // 去重连线
     allWires = allWires.toSet().toList();
-    qDebug() << "Total unique wires:" << allWires.size();
 
     // 填充邻接表，考虑开关状态
     for (CircuitWire* wire : allWires) {
@@ -265,7 +264,6 @@ void CircuitScene::detectAndHighlightCycles() {
         CircuitComponent* endComponent = dynamic_cast<CircuitComponent*>(wire->getEndItem());
 
         if (!startComponent || !endComponent) {
-            qDebug() << "Wire has invalid start or end component.";
             continue;
         }
 
@@ -281,103 +279,55 @@ void CircuitScene::detectAndHighlightCycles() {
         if (isActive) {
             adjacencyMap[startComponent].append(endComponent);
             adjacencyMap[endComponent].append(startComponent);
-            qDebug() << "Active connection between:" << startComponent->getName() << "and" << endComponent->getName();
         }
     }
 
-    // 使用DFS检测所有回路
-    QSet<QList<CircuitComponent*>> cycles;
+    // Step 3: 从所有电源出发，进行 BFS 遍历
+    QSet<CircuitComponent*> poweredComponents;
+    QQueue<CircuitComponent*> queue;
 
-    std::function<void(CircuitComponent*, CircuitComponent*, QList<CircuitComponent*>&)> dfs =
-        [&](CircuitComponent* current, CircuitComponent* parent, QList<CircuitComponent*>& path) {
-            path.append(current);
-            qDebug() << "Visiting component:" << current->getName();
-
-            for (CircuitComponent* neighbor : adjacencyMap[current]) {
-                if (neighbor == parent) continue;
-                if (path.contains(neighbor)) {
-                    // 发现一个回路
-                    int index = path.indexOf(neighbor);
-                    QList<CircuitComponent*> cycle = path.mid(index);
-                    cycle.append(neighbor);
-                    qDebug() << "Cycle detected involving components:";
-                    for (CircuitComponent* comp : cycle) {
-                        qDebug() << comp->getName();
-                    }
-                    cycles.insert(cycle);
-                } else if (!path.contains(neighbor)) {
-                    dfs(neighbor, current, path);
-                }
-            }
-
-            path.removeLast();
-        };
-
+    // 初始化队列，添加所有电源
     for (CircuitComponent* component : components) {
-        QList<CircuitComponent*> path;
-        dfs(component, nullptr, path);
-    }
-
-    // 输出调试信息
-    qDebug() << "Detected cycles:";
-    for (const QList<CircuitComponent*>& cycle : cycles) {
-        QString cycleStr;
-        for (CircuitComponent* comp : cycle) {
-            cycleStr += comp->getName() + " -> ";
+        if (component->getType() == "电源") {
+            queue.enqueue(component);
+            poweredComponents.insert(component);
         }
-        cycleStr.chop(4); // 移除最后的箭头
-        qDebug() << cycleStr;
     }
 
-    // 收集回路中的连线和灯泡
-    QSet<CircuitWire*> wiresInCycles;
-    QSet<CircuitComponent*> bulbsInCycles;
+    // BFS 遍历
+    while (!queue.isEmpty()) {
+        CircuitComponent* current = queue.dequeue();
 
-    for (const QList<CircuitComponent*>& cycle : cycles) {
-        // 遍历回路中的组件，收集连线
-        for (int i = 0; i < cycle.size(); ++i) {
-            CircuitComponent* current = cycle[i];
-            CircuitComponent* next = cycle[(i + 1) % cycle.size()]; // 使用取余操作来形成闭合环
+        for (CircuitComponent* neighbor : adjacencyMap[current]) {
+            if (!poweredComponents.contains(neighbor)) {
+                poweredComponents.insert(neighbor);
+                queue.enqueue(neighbor);
+            }
+        }
+    }
 
-            // 查找连接 current 和 next 的连线
-            for (auto it = current->getWires().begin(); it != current->getWires().end(); ++it) {
-                for (CircuitWire* wire : it.value()) {
-                    CircuitComponent* other = (wire->getStartItem() == current) ? dynamic_cast<CircuitComponent*>(wire->getEndItem()) : dynamic_cast<CircuitComponent*>(wire->getStartItem());
-                    if (other == next) {
-                        wiresInCycles.insert(wire);
-                    }
+    // Step 4: 高亮供电路径中的连线和灯泡
+    for (CircuitComponent* component : poweredComponents) {
+        if (component->getType() == "灯泡") {
+            // 点亮灯泡
+            for (QGraphicsItem* item : component->childItems()) {
+                if (QGraphicsEllipseItem* ellipse = dynamic_cast<QGraphicsEllipseItem*>(item)) {
+                    ellipse->setBrush(Qt::yellow); // 设置为黄色
                 }
             }
         }
 
-        // 收集回路中的灯泡
-        for (CircuitComponent* component : cycle) {
-            if (component->getType() == "灯泡") {
-                bulbsInCycles.insert(component);
-            }
-        }
-    }
-
-    // 高亮显示回路中的连线和灯泡
-    qDebug() << "Wires in cycles:";
-    for (CircuitWire* wire : wiresInCycles) {
-        CircuitComponent* startComponent = dynamic_cast<CircuitComponent*>(wire->getStartItem());
-        CircuitComponent* endComponent = dynamic_cast<CircuitComponent*>(wire->getEndItem());
-        if (startComponent && endComponent) {
-            qDebug() << "Wire between" << startComponent->getName() << "and" << endComponent->getName();
-            wire->setPen(QPen(Qt::red, 2));
-            wire->update();
-        }
-    }
-
-    qDebug() << "Bulbs in cycles:";
-    for (CircuitComponent* bulb : bulbsInCycles) {
-        qDebug() << bulb->getName();
-        for (QGraphicsItem* item : bulb->childItems()) {
-            if (QGraphicsEllipseItem* ellipse = dynamic_cast<QGraphicsEllipseItem*>(item)) {
-                ellipse->setBrush(QBrush(Qt::yellow));
+        // 高亮供电连线
+        for (auto it = component->getWires().begin(); it != component->getWires().end(); ++it) {
+            for (CircuitWire* wire : it.value()) {
+                CircuitComponent* otherComponent = (wire->getStartItem() == component) ?
+                    dynamic_cast<CircuitComponent*>(wire->getEndItem()) :
+                    dynamic_cast<CircuitComponent*>(wire->getStartItem());
+                if (otherComponent && poweredComponents.contains(otherComponent)) {
+                    wire->setPen(QPen(Qt::red, 2)); // 设置为红色
+                    wire->update();
+                }
             }
         }
     }
 }
-

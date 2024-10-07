@@ -284,7 +284,7 @@ void CircuitEditor::comboBoxChanged() {
     updateComboBoxes(selectedComponent);
 
     // 调用回路检测
-    scene->detectAndHighlightCycles();
+    scene->updatePowerStatus();
 }
 
 
@@ -474,7 +474,7 @@ void CircuitEditor::handleDisconnect() {
     CircuitComponent* selectedComponent = scene->getSelectedComponent();
     if (selectedComponent && selectedComponent->getType() == "开关") {
         selectedComponent->setClosed(false);  // 设置为断开状态
-        scene->detectAndHighlightCycles();    // 调用回路检测
+        scene->updatePowerStatus();    // 调用回路检测
     }
 }
 
@@ -482,7 +482,7 @@ void CircuitEditor::handleConnect() {
     CircuitComponent* selectedComponent = scene->getSelectedComponent();
     if (selectedComponent && selectedComponent->getType() == "开关") {
         selectedComponent->setClosed(true);   // 设置为闭合状态
-        scene->detectAndHighlightCycles();    // 调用回路检测
+        scene->updatePowerStatus();    // 调用回路检测
     }
 }
 
