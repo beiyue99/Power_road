@@ -187,18 +187,23 @@ CircuitComponent* createSwitch(int number) {
 
     // 两个小圆圈
     QGraphicsEllipseItem* circle1 = new QGraphicsEllipseItem(0, 0, 10, 10);
+    circle1->setPen(QPen(Qt::black, 2));  // 设置线条宽度为 2
     QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem(50, 0, 10, 10);
+    circle2->setPen(QPen(Qt::black, 2));  // 设置线条宽度为 2
     group->addToGroup(circle1);
     group->addToGroup(circle2);
 
     // 圆圈外两端的实线
     QGraphicsLineItem* line1 = new QGraphicsLineItem(QLineF(-10, 5, 0, 5));  // 左端实线
+    line1->setPen(QPen(Qt::black, 2));  // 设置线条宽度为 2
     group->addToGroup(line1);
     QGraphicsLineItem* line2 = new QGraphicsLineItem(QLineF(60, 5, 70, 5));  // 右端实线
+    line2->setPen(QPen(Qt::black, 2));  // 设置线条宽度为 2
     group->addToGroup(line2);
 
-    // 中间的翘起实线，表示未闭合，翘起角度为30度
+    // 中间的翘起实线，表示未闭合，翘起角度为 30 度
     QGraphicsLineItem* middleLine = new QGraphicsLineItem(QLineF(5, 5, 55, -10));
+    middleLine->setPen(QPen(Qt::black, 2));  // 设置线条宽度为 2
     group->addToGroup(middleLine);
 
     // 添加数字编号
@@ -233,6 +238,12 @@ CircuitComponent* createLamp(char label) {
     lampBody->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     lampComponent->addToGroup(lampBody);
 
+    // 创建文本标签，显示编号
+    QGraphicsTextItem* lampLabel = new QGraphicsTextItem(QString(label));
+    lampLabel->setPos(-5, -10); // 根据需要调整位置
+    lampLabel->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
+    lampComponent->addToGroup(lampLabel);
+
     // 定义灯泡中心和外圆半径
     const qreal radius = 15.0; // 半径 15
     const qreal lineLength = 10.0; // 每根线的长度
@@ -254,14 +265,9 @@ CircuitComponent* createLamp(char label) {
         lampComponent->addToGroup(line);
     }
 
-    // 创建文本标签
-    QGraphicsTextItem* lampLabel = new QGraphicsTextItem(QString(label));
-    lampLabel->setPos(-5, -10); // 根据需要调整位置
-    lampLabel->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
-    lampComponent->addToGroup(lampLabel);
-
     return lampComponent;
 }
+
 
 
 

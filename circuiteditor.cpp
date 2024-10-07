@@ -5,8 +5,11 @@
 
 CircuitEditor::CircuitEditor(QWidget *parent)
     : QWidget(parent), powerCounter(1), switchCounter(1), lampCounter('A') {
-    // 创建主布局：水平布局
-    QHBoxLayout* mainLayout = new QHBoxLayout(this);
+    // 创建主布局，改为垂直布局
+    QVBoxLayout* mainVerticalLayout = new QVBoxLayout(this);
+
+    // 创建原有的主水平布局
+    QHBoxLayout* mainLayout = new QHBoxLayout();
 
     // 左侧布局：电路元件按钮，图形在上，名字在下
     QWidget* leftWidget = new QWidget(this);
@@ -171,13 +174,34 @@ CircuitEditor::CircuitEditor(QWidget *parent)
     comboBox5->setVisible(false);
     comboBox6->setVisible(false);
 
-    // 将布局加入主布局中
+    // 将主水平布局添加到主垂直布局
     mainLayout->addWidget(leftWidget, 0); // 左侧电路元件按钮布局
     mainLayout->addWidget(view, 5);       // 中间电路编辑区，设置权重为 5
     mainLayout->addWidget(rightWidget, 0); // 右侧元件详细信息布局
+    mainVerticalLayout->addLayout(mainLayout);
 
-    setupConnections();
+    // 添加水平分隔线
+    QFrame* bottomSeparator = new QFrame();
+    bottomSeparator->setFrameShape(QFrame::HLine);
+    bottomSeparator->setFrameShadow(QFrame::Sunken);
+    mainVerticalLayout->addWidget(bottomSeparator);
+
+    // 添加底部的按钮（保存方案和打开方案）
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    saveButton = new QPushButton("保存方案");
+    loadButton = new QPushButton("打开方案");
+
+    // 将按钮添加到布局中，并设置居中
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(saveButton);
+    buttonLayout->addWidget(loadButton);
+    buttonLayout->addStretch();
+    mainVerticalLayout->addLayout(buttonLayout);
+
+
+    setupConnections();  // 保留其他原有的信号槽连接
 }
+
 
 void CircuitEditor::setupConnections() {
 
@@ -246,7 +270,133 @@ void CircuitEditor::setupConnections() {
     // 连接 X 和 Y 坐标输入框的信号
        connect(posXEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onPositionChanged);
        connect(posYEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onPositionChanged);
+       // 连接按钮功能
+       connect(saveButton, &QPushButton::clicked, this, &CircuitEditor::saveScheme);
+       connect(loadButton, &QPushButton::clicked, this, &CircuitEditor::loadScheme);
+
+
 }
+
+
+
+void CircuitEditor::saveScheme() {
+    qDebug() << "Saving scheme...";
+
+    QString desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/scheme.xml";
+    QFile file(desktopPath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qWarning() << "Couldn't open file for writing at " << desktopPath;
+        return;
+    }
+
+    QDomDocument doc;
+    QDomElement root = doc.createElement("CircuitScheme");
+    doc.appendChild(root);
+
+    // 遍历所有组件
+    for (CircuitComponent* component : scene->getAllComponents()) {
+        QDomElement componentElem = doc.createElement("Component");
+        componentElem.setAttribute("name", component->getName());
+        componentElem.setAttribute("type", component->getType());
+        componentElem.setAttribute("x", component->pos().x());
+        componentElem.setAttribute("y", component->pos().y());
+        componentElem.setAttribute("rotation", component->rotation());
+        componentElem.setAttribute("closed", component->isClosed() ? "1" : "0");
+        root.appendChild(componentElem);
+    }
+
+    QTextStream out(&file);
+    out.setCodec("UTF-8");  // 设置为UTF-8编码
+    doc.save(out, 4);        // 保存XML
+    file.close();
+
+    qDebug() << "Scheme saved to" << desktopPath;
+}
+
+
+
+void CircuitEditor::loadScheme() {
+    qDebug() << "Loading scheme...";
+
+    QString desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/scheme.xml";
+    QFile file(desktopPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Couldn't open file for reading at " << desktopPath;
+        return;
+    }
+
+    QTextStream in(&file);
+    in.setCodec("UTF-8");  // 设置为UTF-8编码
+
+    QDomDocument doc;
+    if (!doc.setContent(&file)) {
+        qWarning() << "Couldn't parse XML.";
+        file.close();
+        return;
+    }
+    file.close();
+
+    QDomElement root = doc.documentElement();
+    QDomNodeList components = root.elementsByTagName("Component");
+
+    // 清除当前场景的所有组件
+    scene->clear();
+
+    for (int i = 0; i < components.size(); ++i) {
+        QDomElement componentElem = components.at(i).toElement();
+
+        QString name = componentElem.attribute("name");
+        QString type = componentElem.attribute("type");
+        double x = componentElem.attribute("x").toDouble();
+        double y = componentElem.attribute("y").toDouble();
+        double rotation = componentElem.attribute("rotation").toDouble();
+        bool closed = componentElem.attribute("closed").toInt();
+
+        qDebug() << "Loading component:" << name << "of type:" << type
+                 << "at position:" << x << "," << y
+                 << "with rotation:" << rotation;
+
+        // 创建组件
+        CircuitComponent* component = nullptr;
+        if (type == "灯泡") {
+            // 使用灯泡的编号部分（name 的第一个字符），比如灯泡A、灯泡B
+            if (!name.isEmpty()) {
+                component = createLamp(name[2].toLatin1());  // 使用编号部分，"灯泡A" -> 'A'
+            }
+        } else if (type == "开关") {
+            // 从name中提取开关编号
+            bool ok;
+            int switchNumber = name.mid(2).toInt(&ok); // 假设名字是"开关X"格式
+            if (ok) {
+                component = createSwitch(switchNumber);
+            }
+        } else if (type == "电源") {
+            // 从name中提取电源编号
+            bool ok;
+            int powerNumber = name.mid(2).toInt(&ok);  // 假设名字是"电源X"格式
+            if (ok) {
+                component = createPower(powerNumber);
+            }
+        }
+
+        // 如果组件创建成功，则设置其属性并添加到场景
+        if (component) {
+            component->setPos(x, y);
+            component->setRotation(rotation);
+            component->setClosed(closed);
+            scene->addComponent(component);
+        } else {
+            qWarning() << "Failed to create component of type:" << type;
+        }
+    }
+
+    qDebug() << "Scheme loaded from" << desktopPath;
+}
+
+
+
+
+
 
 void CircuitEditor::onPositionChanged() {
     // 获取当前选中的元件

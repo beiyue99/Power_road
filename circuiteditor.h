@@ -18,7 +18,8 @@
 #include "clickablegraphicsview.h"
 #include <QMessageBox>
 #include "circuitcomponent.h"
-
+#include <QDomDocument>
+#include <QStandardPaths>
 class CircuitScene;
 
 class CircuitEditor : public QWidget {
@@ -38,8 +39,10 @@ public slots:
     void handleConnect() ;
     void comboBoxChanged() ;
     void clearComponentDetails() ;
-void handleDeleteComponent() ;
-void onPositionChanged() ;
+    void handleDeleteComponent() ;
+    void onPositionChanged() ;
+    void saveScheme() ;
+    void loadScheme() ;
 private:
     CircuitScene* scene; // 声明 scene 成员变量
     QMap<QString, QStringList> switchComboBoxStates; // 容器：记录每个开关及其 6 个 comboBox 的选项
@@ -56,6 +59,8 @@ private:
     QPushButton* disconnectButton;
      QPushButton* connectButton;
     QPushButton* deleteButton;
+    QPushButton* saveButton;
+    QPushButton* loadButton;
     ClickableGraphicsView* lampView;
     ClickableGraphicsView* switchView;
     ClickableGraphicsView* powerView;
