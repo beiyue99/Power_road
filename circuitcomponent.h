@@ -26,6 +26,10 @@ public:
     QString getName() const { return m_name; }
     QString getType() const { return m_type; }
     void setRotation(double angle); // 使用 父类QGraphicsItemGroup 的 setRotation 方法，实现整个组的旋转
+    // 如果 getWires() 函数声明为 const 版本，改为非常量版本
+    QMap<QString, QList<CircuitWire*>>& getWires() {
+        return m_wires;
+    }
 
     // 新增开关状态
     bool isClosed() const { return m_isClosed; }

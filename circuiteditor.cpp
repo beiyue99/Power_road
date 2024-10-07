@@ -113,6 +113,10 @@ CircuitEditor::CircuitEditor(QWidget *parent)
     switchControlLayout->addWidget(connectButton);
     rightLayout->addLayout(switchControlLayout);
 
+    deleteButton = new QPushButton("删除元件");
+
+    // 将删除按钮添加到界面的右侧布局
+    rightLayout->addWidget(deleteButton);
     // 水平分隔线
     QFrame* separator = new QFrame();
     separator->setFrameShape(QFrame::HLine);
@@ -237,8 +241,27 @@ void CircuitEditor::setupConnections() {
     // 连接开关状态控制按钮
     connect(disconnectButton, &QPushButton::clicked, this, &CircuitEditor::handleDisconnect);
     connect(connectButton, &QPushButton::clicked, this, &CircuitEditor::handleConnect);
+    connect(deleteButton, &QPushButton::clicked, this, &CircuitEditor::handleDeleteComponent);
 
 }
+
+void CircuitEditor::handleDeleteComponent() {
+    // 获取选中的元件
+    CircuitComponent* selectedComponent = scene->getSelectedComponent();
+
+    if (!selectedComponent) {
+        QMessageBox::warning(this, "删除元件", "没有选中的元件！");
+        return;
+    }
+
+    // 移除选中元件以及所有的连线
+    scene->removeComponentAndWires(selectedComponent);
+
+    // 清除右侧详细信息
+    clearComponentDetails();
+}
+
+
 
 void CircuitEditor::clearComponentDetails() {
     // 清空右侧显示

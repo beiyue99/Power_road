@@ -50,12 +50,7 @@ void CircuitWire::updatePosition() {
         QLineF newLine(startPos, endPos);
         setLine(newLine);
 
-        // 调试输出
-        qDebug() << "CircuitWire::updatePosition()";
-        qDebug() << "Start Component:" << (startComponent ? startComponent->getName() : "None")
-                 << "Start Pos:" << startPos;
-        qDebug() << "End Component:" << (endComponent ? endComponent->getName() : "None")
-                 << "End Pos:" << endPos;
+
     }
 }
 QPointF CircuitWire::calculateCircleIntersection(CircuitComponent* component, const QPointF& otherPos) const {

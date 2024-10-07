@@ -73,14 +73,18 @@ void CircuitComponent::addWire(const QString& end, CircuitWire* wire) {
 void CircuitComponent::removeWire(const QString& end) {
     if (m_wires.contains(end)) {
         for (CircuitWire* wire : m_wires[end]) {
-            if (wire->scene()) {
-                wire->scene()->removeItem(wire);
+            if (wire && wire->scene()) {
+                wire->scene()->removeItem(wire);  // 确保从场景中删除导线
             }
-            delete wire;
+            delete wire;  // 删除导线对象
         }
-        m_wires[end].clear();
+        m_wires[end].clear();  // 清除与此端点关联的导线列表
     }
 }
+
+
+
+
 
 void CircuitComponent::removeAllWires() {
     for (const QString& end : m_wires.keys()) {
@@ -90,12 +94,22 @@ void CircuitComponent::removeAllWires() {
 }
 
 void CircuitComponent::updateWires() {
-    for (const QList<CircuitWire*>& wireList : m_wires) {
+
+    for (const QString& end : m_wires.keys()) {
+        QList<CircuitWire*>& wireList = m_wires[end];
         for (CircuitWire* wire : wireList) {
-            wire->updatePosition();
+            if (wire && wire->scene()) {  // 确保导线仍然存在且有效
+
+                wire->updatePosition();
+            } else {
+                qDebug() << "导线不存在或无效：" << wire;
+            }
         }
     }
 }
+
+
+
 
 QPointF CircuitComponent::getWireEndPosition(const QString& end) const {
     if (m_type == "开关") {

@@ -23,7 +23,7 @@ public:
     void updateCircuitStatus(); // 保留以防需要
 
     void updatePowerStatus(); // 新增方法
-
+void removeComponentAndWires(CircuitComponent* component) ;
 signals:
     void itemClicked(CircuitComponent* component);
     void componentDragged(CircuitComponent* component);  // 新增信号
