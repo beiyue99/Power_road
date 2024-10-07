@@ -32,7 +32,6 @@ void CircuitScene::addComponent(CircuitComponent* component) {
 }
 
 void CircuitScene::removeComponentAndWires(CircuitComponent* component) {
-    qDebug() << "正在删除元件：" << component->getName() << "类型：" << component->getType();
 
     // 先断开所有与该组件相关的信号槽
     disconnect(component, nullptr, this, nullptr);
@@ -45,7 +44,7 @@ void CircuitScene::removeComponentAndWires(CircuitComponent* component) {
             QList<CircuitWire*>& wireList = otherComponent->getWires()[end];
             for (CircuitWire* wire : wireList) {
                 if (wire->getStartItem() == component || wire->getEndItem() == component) {
-                    qDebug() << "找到与元件相连的导线：" << wire;
+
                     wiresToRemove.append(wire); // 记录待删除的导线
 
                     // 在其他元件中移除对该导线的引用
@@ -58,19 +57,19 @@ void CircuitScene::removeComponentAndWires(CircuitComponent* component) {
     // 删除所有与该元件相关的导线
     for (CircuitWire* wire : wiresToRemove) {
         if (wire->scene() == this) { // 确保该导线属于当前场景
-            qDebug() << "删除导线：" << wire;
+
             removeItem(wire); // 从场景中删除导线
             delete wire;      // 释放导线内存
-        } else {
-            qDebug() << "导线不在当前场景中，跳过删除：" << wire;
         }
     }
 
     // 最后从组件列表中移除该元件，并删除它
     components.removeOne(component);
     removeItem(component);
-    qDebug() << "删除元件：" << component->getName();
+
     delete component;
+
+     updatePowerStatus();
 }
 
 
