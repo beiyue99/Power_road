@@ -243,7 +243,32 @@ void CircuitEditor::setupConnections() {
     connect(connectButton, &QPushButton::clicked, this, &CircuitEditor::handleConnect);
     connect(deleteButton, &QPushButton::clicked, this, &CircuitEditor::handleDeleteComponent);
     connect(scene,&CircuitScene::recheck,this,&CircuitEditor::updateWiresForComponent);
+    // 连接 X 和 Y 坐标输入框的信号
+       connect(posXEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onPositionChanged);
+       connect(posYEdit, &QLineEdit::editingFinished, this, &CircuitEditor::onPositionChanged);
 }
+
+void CircuitEditor::onPositionChanged() {
+    // 获取当前选中的元件
+    CircuitComponent* selectedComponent = scene->getSelectedComponent();
+    if (!selectedComponent) {
+        return;
+    }
+
+    // 获取用户输入的 X 和 Y 坐标
+    bool xOk, yOk;
+    double x = posXEdit->text().toDouble(&xOk);
+    double y = posYEdit->text().toDouble(&yOk);
+
+    // 如果输入合法，则更新元件的位置
+    if (xOk && yOk) {
+        selectedComponent->setPos(x, y);  // 更新元件位置
+        selectedComponent->updateWires(); // 更新元件的连线
+        scene->updatePowerStatus();       // 更新电路状态，检查灯泡亮暗等
+    }
+}
+
+
 void CircuitEditor::handleDeleteComponent() {
     // 获取选中的元件
     CircuitComponent* selectedComponent = scene->getSelectedComponent();

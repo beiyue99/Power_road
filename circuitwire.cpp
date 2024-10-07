@@ -72,8 +72,6 @@ QPointF CircuitWire::calculateCircleIntersection(CircuitComponent* component, co
 
     // 计算圆周上的交点
     QPointF intersectionPoint = center + direction * radius;
-
-
     return intersectionPoint;
 }
 
@@ -81,7 +79,6 @@ QPointF CircuitWire::calculateCircleIntersection(CircuitComponent* component, co
 void CircuitWire::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     QPen currentPen = pen(); // 使用当前设置的画笔
     painter->setPen(currentPen);
-
     QPointF startPoint = line().p1();
     QPointF endPoint = line().p2();
 

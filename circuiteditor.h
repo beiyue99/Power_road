@@ -39,6 +39,7 @@ public slots:
     void comboBoxChanged() ;
     void clearComponentDetails() ;
 void handleDeleteComponent() ;
+void onPositionChanged() ;
 private:
     CircuitScene* scene; // 声明 scene 成员变量
     QMap<QString, QStringList> switchComboBoxStates; // 容器：记录每个开关及其 6 个 comboBox 的选项
