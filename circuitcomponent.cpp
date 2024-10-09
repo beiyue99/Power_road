@@ -227,19 +227,20 @@ CircuitComponent* createSwitch(int number) {
 
 
 
-CircuitComponent* createLamp(char label) {
+// 修改后的 createLamp 函数
+CircuitComponent* createLamp(const QString& label) {
     // 创建一个 CircuitComponent，表示灯泡
     CircuitComponent* lampComponent = new CircuitComponent(QString("灯泡%1").arg(label), "灯泡");
 
     // 创建灯泡的空心部分，中心在 (0, 0)
-    QGraphicsEllipseItem* lampBody = new QGraphicsEllipseItem(-15, -15, 30, 30); // (-15, -15, 30, 30)
+    QGraphicsEllipseItem* lampBody = new QGraphicsEllipseItem(-15, -15, 30, 30);
     lampBody->setPen(QPen(Qt::black, 2));
     lampBody->setBrush(Qt::NoBrush);
     lampBody->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     lampComponent->addToGroup(lampBody);
 
     // 创建文本标签，显示编号
-    QGraphicsTextItem* lampLabel = new QGraphicsTextItem(QString(label));
+    QGraphicsTextItem* lampLabel = new QGraphicsTextItem(label);
     lampLabel->setPos(-5, -10); // 根据需要调整位置
     lampLabel->setAcceptedMouseButtons(Qt::NoButton); // 禁用鼠标事件
     lampComponent->addToGroup(lampLabel);

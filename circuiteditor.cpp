@@ -12,7 +12,7 @@ CircuitEditor::CircuitEditor(QWidget *parent)
     QHBoxLayout* mainLayout = new QHBoxLayout();
 
     // 左侧布局：电路元件按钮，图形在上，名字在下
-    QWidget* leftWidget = new QWidget(this);
+    leftWidget = new QWidget(this);
     leftWidget->setFixedSize(110, 500); // 设置固定大小
     QVBoxLayout* leftLayout = new QVBoxLayout(leftWidget);
 
@@ -208,7 +208,7 @@ void CircuitEditor::setupConnections() {
 
     connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
            // 创建新的灯泡并添加到场景
-           CircuitComponent* newLamp = createLamp(lampCounter++);
+           CircuitComponent* newLamp = createLamp(QString(lampCounter++));
            scene->addComponent(newLamp);
            // 清除当前选择的项
            scene->clearSelection();
@@ -301,27 +301,46 @@ void CircuitEditor::saveScheme() {
         componentElem.setAttribute("y", component->pos().y());
         componentElem.setAttribute("rotation", component->rotation());
         componentElem.setAttribute("closed", component->isClosed() ? "1" : "0");
+
+        // 如果是开关，保存其组合框状态
+        if (component->getType() == "开关") {
+            QStringList comboBoxValues = switchComboBoxStates.value(component->getName(), QStringList());
+            for (const QString& value : comboBoxValues) {
+                QDomElement comboBoxElem = doc.createElement("ComboBox");
+                QDomText textNode = doc.createTextNode(value);
+                comboBoxElem.appendChild(textNode);
+                componentElem.appendChild(comboBoxElem);
+            }
+        }
+
         root.appendChild(componentElem);
     }
 
-    // 遍历所有导线
+    // 使用集合来避免重复保存导线
+    QSet<CircuitWire*> savedWires;
+
+    // 遍历所有组件，保存其导线
     for (CircuitComponent* component : scene->getAllComponents()) {
         for (const QString& end : component->getWires().keys()) {
             QList<CircuitWire*>& wireList = component->getWires()[end];
             for (CircuitWire* wire : wireList) {
-                CircuitComponent* startComponent = dynamic_cast<CircuitComponent*>(wire->getStartItem());
-                CircuitComponent* endComponent = dynamic_cast<CircuitComponent*>(wire->getEndItem());
+                if (!savedWires.contains(wire)) {
+                    savedWires.insert(wire);
 
-                if (startComponent && endComponent) {
-                    QDomElement wireElem = doc.createElement("Wire");
-                    wireElem.setAttribute("startComponent", startComponent->getName());
-                    wireElem.setAttribute("startEndType", wire->getStartEndType());
-                    wireElem.setAttribute("endComponent", endComponent->getName());
-                    wireElem.setAttribute("endEndType", wire->getEndEndType());
-                    root.appendChild(wireElem);
-                    qDebug() << "Saving wire between" << startComponent->getName() << "and" << endComponent->getName();
-                } else {
-                    qWarning() << "Failed to save wire due to missing components.";
+                    CircuitComponent* startComponent = dynamic_cast<CircuitComponent*>(wire->getStartItem());
+                    CircuitComponent* endComponent = dynamic_cast<CircuitComponent*>(wire->getEndItem());
+
+                    if (startComponent && endComponent) {
+                        QDomElement wireElem = doc.createElement("Wire");
+                        wireElem.setAttribute("startComponent", startComponent->getName());
+                        wireElem.setAttribute("startEndType", wire->getStartEndType());
+                        wireElem.setAttribute("endComponent", endComponent->getName());
+                        wireElem.setAttribute("endEndType", wire->getEndEndType());
+                        root.appendChild(wireElem);
+                        qDebug() << "Saving wire between" << startComponent->getName() << "and" << endComponent->getName();
+                    } else {
+                        qWarning() << "Failed to save wire due to missing components.";
+                    }
                 }
             }
         }
@@ -333,6 +352,8 @@ void CircuitEditor::saveScheme() {
     file.close();
 
     qDebug() << "Scheme saved to" << desktopPath;
+//    leftWidget->setVisible(true);
+//    deleteButton->setVisible(true);
 }
 
 
@@ -365,6 +386,9 @@ void CircuitEditor::loadScheme() {
     // 清除当前场景的所有组件
     scene->clear();
 
+    // 清除开关的组合框状态
+    switchComboBoxStates.clear();
+
     QMap<QString, CircuitComponent*> componentMap;
 
     // 加载所有元件
@@ -380,7 +404,8 @@ void CircuitEditor::loadScheme() {
 
         CircuitComponent* component = nullptr;
         if (type == "灯泡") {
-            component = createLamp(name[2].toLatin1());
+            QString label = name.mid(2); // 从名称中提取标识
+            component = createLamp(label);
         } else if (type == "开关") {
             int switchNumber = name.mid(2).toInt();
             component = createSwitch(switchNumber);
@@ -396,6 +421,17 @@ void CircuitEditor::loadScheme() {
             scene->addComponent(component);
             componentMap[name] = component; // 将元件添加到映射中
             qDebug() << "Component" << name << "loaded.";
+
+            // 如果是开关，恢复组合框状态
+            if (type == "开关") {
+                QStringList comboBoxValues;
+                QDomNodeList comboBoxNodes = componentElem.elementsByTagName("ComboBox");
+                for (int j = 0; j < comboBoxNodes.size(); ++j) {
+                    QDomElement comboBoxElem = comboBoxNodes.at(j).toElement();
+                    comboBoxValues.append(comboBoxElem.text());
+                }
+                switchComboBoxStates[name] = comboBoxValues;
+            }
         }
     }
 
@@ -422,16 +458,23 @@ void CircuitEditor::loadScheme() {
             qWarning() << "Failed to create wire between" << startComponentName << "and" << endComponentName;
         }
     }
-    // 加载完成后，更新所有开关的组合框
-      for (CircuitComponent* comp : scene->getAllComponents()) {
-          if (comp->getType() == "开关") {
-              updateComboBoxes(comp);
-              updateWiresForComponent(comp);
-          }
-      }
+
+    // 恢复开关的组合框状态
+    for (CircuitComponent* comp : componentMap.values()) {
+        if (comp->getType() == "开关") {
+            updateComboBoxes(comp);
+            // 不再调用 updateWiresForComponent，以避免移除已有的导线
+        }
+    }
+
     scene->updatePowerStatus();
     qDebug() << "Scheme loaded from" << desktopPath;
+
+    // 加载方案后，隐藏左侧元件视图和删除按钮
+    leftWidget->setVisible(false);
+    deleteButton->setVisible(false);
 }
+
 
 
 

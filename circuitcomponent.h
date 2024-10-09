@@ -79,7 +79,7 @@ signals:
 };
 
 // 声明创建组件的函数
-CircuitComponent* createLamp(char label);
+CircuitComponent* createLamp(const QString& label);
 CircuitComponent* createSwitch(int number);
 CircuitComponent* createPower(int number);
 CircuitComponent* createLampWithoutLabel();

@@ -65,6 +65,9 @@ private:
     ClickableGraphicsView* switchView;
     ClickableGraphicsView* powerView;
 
+    // 左侧元件视图
+    QWidget* leftWidget; // 添加这一行
+
 
     QLabel* label1 = new QLabel;
     QLabel* label2 = new QLabel;
