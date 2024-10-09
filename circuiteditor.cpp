@@ -278,7 +278,6 @@ void CircuitEditor::setupConnections() {
 }
 
 
-
 void CircuitEditor::saveScheme() {
     qDebug() << "Saving scheme...";
 
@@ -305,6 +304,29 @@ void CircuitEditor::saveScheme() {
         root.appendChild(componentElem);
     }
 
+    // 遍历所有导线
+    for (CircuitComponent* component : scene->getAllComponents()) {
+        for (const QString& end : component->getWires().keys()) {
+            QList<CircuitWire*>& wireList = component->getWires()[end];
+            for (CircuitWire* wire : wireList) {
+                CircuitComponent* startComponent = dynamic_cast<CircuitComponent*>(wire->getStartItem());
+                CircuitComponent* endComponent = dynamic_cast<CircuitComponent*>(wire->getEndItem());
+
+                if (startComponent && endComponent) {
+                    QDomElement wireElem = doc.createElement("Wire");
+                    wireElem.setAttribute("startComponent", startComponent->getName());
+                    wireElem.setAttribute("startEndType", wire->getStartEndType());
+                    wireElem.setAttribute("endComponent", endComponent->getName());
+                    wireElem.setAttribute("endEndType", wire->getEndEndType());
+                    root.appendChild(wireElem);
+                    qDebug() << "Saving wire between" << startComponent->getName() << "and" << endComponent->getName();
+                } else {
+                    qWarning() << "Failed to save wire due to missing components.";
+                }
+            }
+        }
+    }
+
     QTextStream out(&file);
     out.setCodec("UTF-8");  // 设置为UTF-8编码
     doc.save(out, 4);        // 保存XML
@@ -312,6 +334,7 @@ void CircuitEditor::saveScheme() {
 
     qDebug() << "Scheme saved to" << desktopPath;
 }
+
 
 
 
@@ -342,6 +365,9 @@ void CircuitEditor::loadScheme() {
     // 清除当前场景的所有组件
     scene->clear();
 
+    QMap<QString, CircuitComponent*> componentMap;
+
+    // 加载所有元件
     for (int i = 0; i < components.size(); ++i) {
         QDomElement componentElem = components.at(i).toElement();
 
@@ -352,47 +378,60 @@ void CircuitEditor::loadScheme() {
         double rotation = componentElem.attribute("rotation").toDouble();
         bool closed = componentElem.attribute("closed").toInt();
 
-        qDebug() << "Loading component:" << name << "of type:" << type
-                 << "at position:" << x << "," << y
-                 << "with rotation:" << rotation;
-
-        // 创建组件
         CircuitComponent* component = nullptr;
         if (type == "灯泡") {
-            // 使用灯泡的编号部分（name 的第一个字符），比如灯泡A、灯泡B
-            if (!name.isEmpty()) {
-                component = createLamp(name[2].toLatin1());  // 使用编号部分，"灯泡A" -> 'A'
-            }
+            component = createLamp(name[2].toLatin1());
         } else if (type == "开关") {
-            // 从name中提取开关编号
-            bool ok;
-            int switchNumber = name.mid(2).toInt(&ok); // 假设名字是"开关X"格式
-            if (ok) {
-                component = createSwitch(switchNumber);
-            }
+            int switchNumber = name.mid(2).toInt();
+            component = createSwitch(switchNumber);
         } else if (type == "电源") {
-            // 从name中提取电源编号
-            bool ok;
-            int powerNumber = name.mid(2).toInt(&ok);  // 假设名字是"电源X"格式
-            if (ok) {
-                component = createPower(powerNumber);
-            }
+            int powerNumber = name.mid(2).toInt();
+            component = createPower(powerNumber);
         }
 
-        // 如果组件创建成功，则设置其属性并添加到场景
         if (component) {
             component->setPos(x, y);
             component->setRotation(rotation);
             component->setClosed(closed);
             scene->addComponent(component);
-        } else {
-            qWarning() << "Failed to create component of type:" << type;
+            componentMap[name] = component; // 将元件添加到映射中
+            qDebug() << "Component" << name << "loaded.";
         }
     }
 
+    // 加载所有导线
+    QDomNodeList wires = root.elementsByTagName("Wire");
+    for (int i = 0; i < wires.size(); ++i) {
+        QDomElement wireElem = wires.at(i).toElement();
+
+        QString startComponentName = wireElem.attribute("startComponent");
+        QString startEndType = wireElem.attribute("startEndType");
+        QString endComponentName = wireElem.attribute("endComponent");
+        QString endEndType = wireElem.attribute("endEndType");
+
+        CircuitComponent* startComponent = componentMap.value(startComponentName, nullptr);
+        CircuitComponent* endComponent = componentMap.value(endComponentName, nullptr);
+
+        if (startComponent && endComponent) {
+            qDebug() << "Creating wire between" << startComponentName << "and" << endComponentName;
+            CircuitWire* wire = new CircuitWire(startComponent, endComponent, startEndType, endEndType);
+            scene->addItem(wire); // 将导线添加到场景中
+            startComponent->addWire(startEndType, wire);
+            endComponent->addWire(endEndType, wire);
+        } else {
+            qWarning() << "Failed to create wire between" << startComponentName << "and" << endComponentName;
+        }
+    }
+    // 加载完成后，更新所有开关的组合框
+      for (CircuitComponent* comp : scene->getAllComponents()) {
+          if (comp->getType() == "开关") {
+              updateComboBoxes(comp);
+              updateWiresForComponent(comp);
+          }
+      }
+    scene->updatePowerStatus();
     qDebug() << "Scheme loaded from" << desktopPath;
 }
-
 
 
 
@@ -431,9 +470,18 @@ void CircuitEditor::handleDeleteComponent() {
     // 移除选中元件以及所有的连线
     scene->removeComponentAndWires(selectedComponent);
 
+    // 遍历所有开关并更新它们的 ComboBox
+    for (CircuitComponent* comp : scene->getAllComponents()) {
+        if (comp->getType() == "开关") {
+            updateComboBoxes(comp); // 更新 ComboBox
+            updateWiresForComponent(comp); // 更新连线
+        }
+    }
+
     // 清除右侧详细信息
     clearComponentDetails();
 }
+
 
 
 
@@ -486,10 +534,31 @@ void CircuitEditor::comboBoxChanged() {
 
 
 void CircuitEditor::updateWiresForComponent(CircuitComponent* component) {
-    // 首先，清除当前组件的所有连线
+    if (component->getType() != "开关") return;
+
+    // 清除当前组件的所有连线
     component->removeAllWires();
 
-    // 映射每个 comboBox 到对应的端点（1端或2端）
+    // **新增部分**：遍历所有开关，移除关于当前组件的旧连接信息
+    for (CircuitComponent* comp : scene->getAllComponents()) {
+        if (comp->getType() == "开关" && comp != component) {
+            QStringList& compValues = switchComboBoxStates[comp->getName()];
+            if (compValues.isEmpty()) {
+                compValues = QStringList() << "" << "" << "" << "" << "" << "";
+            }
+            // 移除关于当前组件的连接信息
+            for (int i = 0; i < compValues.size(); ++i) {
+                if (compValues[i].contains(component->getName())) {
+                    compValues[i] = "";
+                }
+            }
+            // 如果被移除连接的开关是当前选中的开关，更新其组合框显示
+            if (comp == scene->getSelectedComponent()) {
+                updateComboBoxes(comp);
+            }
+        }
+    }
+
     QMap<QComboBox*, QString> comboBoxEndMap = {
         {comboBox1, "1端"},
         {comboBox2, "1端"},
@@ -499,20 +568,27 @@ void CircuitEditor::updateWiresForComponent(CircuitComponent* component) {
         {comboBox6, "2端"}
     };
 
-    // 遍历每个 comboBox，创建连线
+    // 用于记录被连接的开关及其对应的端点
+    QMap<CircuitComponent*, QList<QPair<QString, QString>>> connectedSwitches;
+
+    // 创建端点到组合框索引的映射
+    QMap<QString, QList<int>> endToIndices = {
+        {"1端", {0, 1, 2}},
+        {"2端", {3, 4, 5}}
+    };
+
     for (QComboBox* comboBox : comboBoxEndMap.keys()) {
         QString targetText = comboBox->currentText();
+
         if (!targetText.isEmpty()) {
-            // 解析目标组件名称和端点
-            QString targetComponentName;
-            QString targetEndType;
+            QString targetComponentName, targetEndType;
             if (targetText.contains("-")) {
                 QStringList parts = targetText.split("-");
                 targetComponentName = parts[0];
                 targetEndType = parts[1];
             } else {
                 targetComponentName = targetText;
-                targetEndType = ""; // 对于灯泡和电源，无需指定端点
+                targetEndType = "";  // 如果是灯泡或电源
             }
 
             // 查找目标组件
@@ -525,56 +601,128 @@ void CircuitEditor::updateWiresForComponent(CircuitComponent* component) {
             }
 
             if (targetComponent) {
-                // 创建连线，指定正确的起点和终点端点类型
-                QString componentEnd = comboBoxEndMap[comboBox]; // 当前组件的端点（1端或2端）
+                QString componentEnd = comboBoxEndMap[comboBox];  // 当前组件的端点（"1端" 或 "2端"）
                 CircuitWire* wire = new CircuitWire(component, targetComponent, componentEnd, targetEndType);
                 scene->addItem(wire);
                 component->addWire(componentEnd, wire);
 
+                // 如果目标组件是开关，记录下来以便更新
+                if (targetComponent->getType() == "开关") {
+                    // 保存当前组件的端点和目标组件的端点
+                    connectedSwitches[targetComponent].append(qMakePair(componentEnd, targetEndType));
+                }
             }
         }
     }
 
     // 更新连线位置
     component->updateWires();
-    // CircuitScene::updateCircuitStatus 会被自动调用 via CircuitScene::updateWires
     scene->updatePowerStatus();
+
+    // 更新被连接开关的组合框状态
+    for (auto it = connectedSwitches.begin(); it != connectedSwitches.end(); ++it) {
+        CircuitComponent* connectedSwitch = it.key();
+        QList<QPair<QString, QString>> connections = it.value();
+
+        // 更新被连接开关的 switchComboBoxStates
+        QStringList& connectedSwitchValues = switchComboBoxStates[connectedSwitch->getName()];
+        if (connectedSwitchValues.isEmpty()) {
+            connectedSwitchValues = QStringList() << "" << "" << "" << "" << "" << "";
+        }
+
+        // 创建端点到组合框索引的映射
+        QMap<QString, QList<int>> endToIndices = {
+            {"1端", {0, 1, 2}},
+            {"2端", {3, 4, 5}}
+        };
+
+        for (const QPair<QString, QString>& conn : connections) {
+            QString currentComponentEnd = conn.first; // 当前组件的端点
+            QString connectedEnd = conn.second;       // 被连接开关的端点
+
+            // 找到一个空的组合框索引，属于被连接开关的 connectedEnd（"1端" 或 "2端"）
+            int emptyIndex = -1;
+            QList<int> indices = endToIndices[connectedEnd];
+            for (int i : indices) {
+                if (connectedSwitchValues[i].isEmpty()) {
+                    emptyIndex = i;
+                    break;
+                }
+            }
+
+            if (emptyIndex != -1) {
+                // 记录连接信息，使用当前组件的名称和端点
+                connectedSwitchValues[emptyIndex] = component->getName() + "-" + currentComponentEnd;
+            } else {
+                // 没有空的组合框，可能需要提示用户
+                qDebug() << "No empty comboBox for connected switch" << connectedSwitch->getName() << "on end" << connectedEnd;
+            }
+        }
+
+        // 如果被连接的开关是当前选中的开关，更新其组合框显示
+        if (connectedSwitch == scene->getSelectedComponent()) {
+            updateComboBoxes(connectedSwitch);
+        }
+    }
 }
 
+
+
+
+
+
+
+
 void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
-    if (!component || component->getType() != "开关") {
-        return;
-    }
+    if (!component || component->getType() != "开关") return;
 
-    // 获取当前开关保存的组合框状态
-    QStringList savedValues = switchComboBoxStates.value(component->getName(),
-                                                         QStringList() << "" << "" << "" << "" << "" << "");
+    QStringList savedValues = switchComboBoxStates.value(component->getName(), QStringList() << "" << "" << "" << "" << "" << "");
 
-    // 断开信号连接，防止触发 comboBoxChanged
-    disconnectCMB();
+    disconnectCMB();  // 断开信号连接，防止不必要的触发
 
-    // 获取所有元件的名称列表
-    QStringList componentNames;
+    // 用于记录所有已被其他开关占用的端点
+    QSet<QString> occupiedEnds;
+
+    // 遍历所有开关，获取其已连接的端点
     for (CircuitComponent* comp : scene->getAllComponents()) {
-        if (comp->getName() != component->getName()) {
-            if (comp->getType() == "开关") {
-                componentNames << comp->getName() + "-1端" << comp->getName() + "-2端";
-            } else {
-                componentNames << comp->getName();
+        if (comp->getType() == "开关" && comp != component) {
+            QStringList otherSwitchValues = switchComboBoxStates.value(comp->getName(), QStringList() << "" << "" << "" << "" << "" << "");
+            for (const QString& value : otherSwitchValues) {
+                if (!value.isEmpty()) {
+                    occupiedEnds.insert(value);
+                }
             }
         }
     }
 
-    // 更新每个组合框的选项并设置默认值
     QComboBox* comboBoxes[6] = {comboBox1, comboBox2, comboBox3, comboBox4, comboBox5, comboBox6};
 
     for (int i = 0; i < 6; ++i) {
         comboBoxes[i]->clear();
         comboBoxes[i]->addItem("");  // 添加空选项
 
-        QStringList options = componentNames;
+        QStringList options;
 
-        // 排除同一端已选中的项（保留当前组合框的值）
+        // 构建选项列表
+        for (CircuitComponent* comp : scene->getAllComponents()) {
+            if (comp->getName() != component->getName()) {
+                if (comp->getType() == "开关") {
+                    QString end1 = comp->getName() + "-1端";
+                    QString end2 = comp->getName() + "-2端";
+                    if (!occupiedEnds.contains(end1) || savedValues.contains(end1)) {
+                        options << end1;
+                    }
+                    if (!occupiedEnds.contains(end2) || savedValues.contains(end2)) {
+                        options << end2;
+                    }
+                } else {
+                    if (!occupiedEnds.contains(comp->getName()) || savedValues.contains(comp->getName())) {
+                        options << comp->getName();
+                    }
+                }
+            }
+        }
+
         QStringList excludes;
         if (i < 3) {
             // 1端
@@ -598,7 +746,6 @@ void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
             }
         }
 
-        // 设置当前值
         if (!savedValues[i].isEmpty() && comboBoxes[i]->findText(savedValues[i]) != -1) {
             comboBoxes[i]->setCurrentText(savedValues[i]);
         } else {
@@ -606,51 +753,64 @@ void CircuitEditor::updateComboBoxes(CircuitComponent* component) {
         }
     }
 
-    // 重新连接信号
-    connectCMB();
+    connectCMB();  // 重新连接信号
 }
+
+
+
+
+
 
 void CircuitEditor::updateComponentDetails(CircuitComponent* component) {
 
-    if (!component) {
-           qDebug() << "传入的组件无效！";
-           return;  // 如果组件无效，提前返回
-       }
-
     // 更新元件名称
-    QString newName = component->getName();
-    if (nameLabel->text() != newName) {
-        nameLabel->setText(newName);
-        nameLabel->setAlignment(Qt::AlignCenter);  // 确保居中对齐
+     nameLabel->setText(component->getName());
+     nameLabel->setAlignment(Qt::AlignCenter);
+
+     // 更新类型
+     typeLabel->setText("类型：" + component->getType());
+     typeLabel->setAlignment(Qt::AlignCenter);
+
+     // 更新旋转角度
+     rotationEdit->setText(QString::number(component->rotation()));
+
+     // 更新位置X
+     posXEdit->setText(QString::number(component->pos().x()));
+
+     // 更新位置Y
+     posYEdit->setText(QString::number(component->pos().y()));
+
+    if (component->getType() == "开关") {
+        // 为该开关创建自己的组合框
+        for (int i = 0; i < 6; ++i) {
+            component->comboBoxes[i] = new QComboBox();
+            // 添加到界面布局中
+        }
+
+        // 将组合框指针传递给组件
+        component->setComboBoxes(component->comboBoxes);
+
+        // 连接组合框的信号槽
+        for (int i = 0; i < 6; ++i) {
+            connect(component->comboBoxes[i], QOverload<int>::of(&QComboBox::currentIndexChanged),
+                    this, &CircuitEditor::comboBoxChanged);
+        }
     }
 
-    // 更新旋转角度
-    double rotation = component->rotation();
-    if (rotationEdit->text() != QString::number(rotation)) {
-        rotationEdit->setText(QString::number(rotation));
-    }
+    if (component->getType() == "开关") {
+         QStringList savedValues = switchComboBoxStates.value(component->getName(), QStringList() << "" << "" << "" << "" << "" << "");
+         disconnectCMB();  // 断开信号连接
 
-    // 更新位置X
-    double posX = component->pos().x();
-    if (posXEdit->text() != QString::number(posX)) {
-        posXEdit->setText(QString::number(posX));
-    }
+         QComboBox* comboBoxes[6] = {comboBox1, comboBox2, comboBox3, comboBox4, comboBox5, comboBox6};
 
-    // 更新位置Y
-    double posY = component->pos().y();
-    if (posYEdit->text() != QString::number(posY)) {
-        posYEdit->setText(QString::number(posY));
-    }
+         for (int i = 0; i < 6; ++i) {
+             comboBoxes[i]->setCurrentText(savedValues[i]);
+         }
 
-    // 更新元件类型
-    QString newType = component->getType();
-    if (typeLabel->text() != "类型：" + newType) {
-        typeLabel->setText("类型：" + newType);
-        typeLabel->setAlignment(Qt::AlignCenter);  // 确保居中对齐
-    }
-
+         connectCMB();  // 重新连接信号
+     }
     // 根据类型显示或隐藏按钮和 comboBox
-    bool isSwitch = (newType == "开关");
+    bool isSwitch = (component->getType() == "开关");
     disconnectButton->setVisible(isSwitch);
     connectButton->setVisible(isSwitch);
     label1->setVisible(isSwitch);

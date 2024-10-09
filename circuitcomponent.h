@@ -14,7 +14,7 @@
 #include <QDebug>
 #include "circuitwire.h"
 #include <QObject>
-
+#include <QComboBox>
 
 class CircuitWire;
 // 基础电路组件类的基类，是一个组
@@ -58,9 +58,18 @@ public:
     QString m_type;
     bool m_isClosed = false;
     QMap<QString, QList<CircuitWire*>> m_wires; // 修改为每个端点对应一个连线列表
+
+    // 添加组合框和连接状态
+    QStringList comboBoxValues;  // 存储组合框的值，6个元素
+    QComboBox* comboBoxes[6];    // 指向对应的组合框
 public:
     const QMap<QString, QList<CircuitWire*>>& getWires() const { return m_wires; }
 
+    void setComboBoxes(QComboBox* boxes[6]) {
+          for (int i = 0; i < 6; ++i) {
+              comboBoxes[i] = boxes[i];
+          }
+      }
 public:
     qreal getRadius() const; // 新增方法，获取组件的半径
 
