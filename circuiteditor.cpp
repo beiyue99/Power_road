@@ -206,41 +206,32 @@ CircuitEditor::CircuitEditor(QWidget *parent)
 void CircuitEditor::setupConnections() {
 
 
-    connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
-           // 创建新的灯泡并添加到场景
-           CircuitComponent* newLamp = createLamp(QString(lampCounter++));
-           scene->addComponent(newLamp);
-           // 清除当前选择的项
-           scene->clearSelection();
-           // 选中新添加的灯泡
-           newLamp->setSelected(true);
-           // 更新右侧信息
-           updateComponentDetails(newLamp);
-       });
+    // 创建新的灯泡
+        connect(lampView, &ClickableGraphicsView::clicked, this, [this]() {
+            CircuitComponent* newLamp = createLamp(QString(QChar(lampCounter++)));
+            scene->addComponent(newLamp);
+            scene->clearSelection();
+            newLamp->setSelected(true);
+            updateComponentDetails(newLamp);
+        });
 
-       connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
-           // 创建新的开关并添加到场景
-           CircuitComponent* newSwitch = createSwitch(switchCounter++);
-           scene->addComponent(newSwitch);
-           // 清除当前选择的项
-           scene->clearSelection();
-           // 选中新添加的开关
-           newSwitch->setSelected(true);
-           // 更新右侧信息
-           updateComponentDetails(newSwitch);
-       });
+        // 创建新的开关
+        connect(switchView, &ClickableGraphicsView::clicked, this, [this]() {
+            CircuitComponent* newSwitch = createSwitch(switchCounter++);
+            scene->addComponent(newSwitch);
+            scene->clearSelection();
+            newSwitch->setSelected(true);
+            updateComponentDetails(newSwitch);
+        });
 
-       connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
-           // 创建新的电源并添加到场景
-           CircuitComponent* newPower = createPower(powerCounter++);
-           scene->addComponent(newPower);
-           // 清除当前选择的项
-           scene->clearSelection();
-           // 选中新添加的电源
-           newPower->setSelected(true);
-           // 更新右侧信息
-           updateComponentDetails(newPower);
-       });
+        // 创建新的电源
+        connect(powerView, &ClickableGraphicsView::clicked, this, [this]() {
+            CircuitComponent* newPower = createPower(powerCounter++);
+            scene->addComponent(newPower);
+            scene->clearSelection();
+            newPower->setSelected(true);
+            updateComponentDetails(newPower);
+        });
         //点击电路中元件，更新右侧相关信息
         connect(scene, &CircuitScene::itemClicked, this, [this](CircuitComponent* component) {
                 updateComponentDetails(component);
@@ -352,10 +343,8 @@ void CircuitEditor::saveScheme() {
     file.close();
 
     qDebug() << "Scheme saved to" << desktopPath;
-//    leftWidget->setVisible(true);
-//    deleteButton->setVisible(true);
-}
 
+}
 
 
 
@@ -391,6 +380,11 @@ void CircuitEditor::loadScheme() {
 
     QMap<QString, CircuitComponent*> componentMap;
 
+    // 新增：用于记录最大的灯泡标签和开关、电源编号
+    QChar maxLampLabel = 'A' - 1;
+    int maxSwitchNumber = 0;
+    int maxPowerNumber = 0;
+
     // 加载所有元件
     for (int i = 0; i < components.size(); ++i) {
         QDomElement componentElem = components.at(i).toElement();
@@ -406,12 +400,30 @@ void CircuitEditor::loadScheme() {
         if (type == "灯泡") {
             QString label = name.mid(2); // 从名称中提取标识
             component = createLamp(label);
+
+            // 更新最大灯泡标签
+            if (!label.isEmpty()) {
+                QChar labelChar = label.at(0);
+                if (labelChar > maxLampLabel) {
+                    maxLampLabel = labelChar;
+                }
+            }
         } else if (type == "开关") {
             int switchNumber = name.mid(2).toInt();
             component = createSwitch(switchNumber);
+
+            // 更新最大开关编号
+            if (switchNumber > maxSwitchNumber) {
+                maxSwitchNumber = switchNumber;
+            }
         } else if (type == "电源") {
             int powerNumber = name.mid(2).toInt();
             component = createPower(powerNumber);
+
+            // 更新最大电源编号
+            if (powerNumber > maxPowerNumber) {
+                maxPowerNumber = powerNumber;
+            }
         }
 
         if (component) {
@@ -434,6 +446,15 @@ void CircuitEditor::loadScheme() {
             }
         }
     }
+
+    // 更新计数器，确保新添加的元件名称不重复
+    if (maxLampLabel >= 'A') {
+        lampCounter = maxLampLabel.unicode() + 1;
+    } else {
+        lampCounter = 'A';
+    }
+    switchCounter = maxSwitchNumber + 1;
+    powerCounter = maxPowerNumber + 1;
 
     // 加载所有导线
     QDomNodeList wires = root.elementsByTagName("Wire");
@@ -469,12 +490,7 @@ void CircuitEditor::loadScheme() {
 
     scene->updatePowerStatus();
     qDebug() << "Scheme loaded from" << desktopPath;
-
-    // 加载方案后，隐藏左侧元件视图和删除按钮
-    leftWidget->setVisible(false);
-    deleteButton->setVisible(false);
 }
-
 
 
 
@@ -524,6 +540,7 @@ void CircuitEditor::handleDeleteComponent() {
     // 清除右侧详细信息
     clearComponentDetails();
 }
+
 
 
 

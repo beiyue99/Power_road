@@ -42,12 +42,17 @@ void CircuitScene::removeComponentAndWires(CircuitComponent* component) {
     for (CircuitComponent* otherComponent : components) {
         for (const QString& end : otherComponent->getWires().keys()) {
             QList<CircuitWire*>& wireList = otherComponent->getWires()[end];
+            QList<CircuitWire*> wiresToErase;
             for (CircuitWire* wire : wireList) {
                 // 检查导线是否与要删除的元件相连
                 if (wire->getStartItem() == component || wire->getEndItem() == component) {
                     wiresToRemove.append(wire); // 记录待删除的导线
-                    otherComponent->removeWire(end); // 清除其他元件中对此导线的引用
+                    wiresToErase.append(wire);  // 记录要从 otherComponent 中移除的导线
                 }
+            }
+            // 从 otherComponent 的导线列表中移除相关导线
+            for (CircuitWire* wire : wiresToErase) {
+                wireList.removeOne(wire);
             }
         }
     }
